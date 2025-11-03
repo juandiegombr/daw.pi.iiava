@@ -9,12 +9,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get("/", async (req, res) => {
-  res.json({ data: { message: "Hello world!" } });
-});
-
-app.get("/api", async (req, res) => {
-  res.json({ data: { message: "Hello world!" } });
+app.get("/api/fields", async (req, res) => {
+  res.json({ data: {
+    fields: []
+  } });
 });
 
 const PORT = process.env.PORT || 3000;

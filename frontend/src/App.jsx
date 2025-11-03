@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export default function App() {
-  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    fetch("/api", { method: "GET", headers: { "Content-Type": "application/json" } })
+    fetch("/api/fields", { method: "GET", headers: { "Content-Type": "application/json" } })
       .then((response) => response.json())
-      .then((data) => {
-        setMessage(data.data.message);
+      .then((result) => {
+        console.log("Success fetching:", result);
+        
       })
       .catch((error) => console.error("Error fetching: ", error));
   }, []);
@@ -15,7 +15,6 @@ export default function App() {
   return (
     <div style={{ padding: 20 }}>
       <h1>🌾 Collitap</h1>
-      <p>{message}</p>
     </div>
   );
 }
