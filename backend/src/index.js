@@ -13,6 +13,10 @@ app.get("/", async (req, res) => {
   res.json({ data: { message: "Hello world!" } });
 });
 
+app.get("/api", async (req, res) => {
+  res.json({ data: { message: "Hello world!" } });
+});
+
 const PORT = process.env.PORT || 3000;
 // const MONGO_URI = process.env.MONGO_URI;
 
