@@ -5,7 +5,6 @@ const logger = pino({
     target: 'pino-pretty',
     options: {
       colorize: true,
-      colorize: true,
       translateTime: 'HH:MM:ss',
       ignore: 'pid,hostname,req,res,responseTime',
       messageFormat: '{req.method} {req.url}',
