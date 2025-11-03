@@ -6,9 +6,9 @@ import dotenv from "dotenv";
 const FarmerSchema = new mongoose.Schema({
   name: String,
   email: String,
-});
+}, { collection: "farmer" });
 
-const Farmer = mongoose.model("Field", FarmerSchema);
+const Farmer = mongoose.model("Farmer", FarmerSchema);
 
 dotenv.config();
 
