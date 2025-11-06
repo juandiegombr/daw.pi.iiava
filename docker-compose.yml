@@ -21,7 +21,7 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
-      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017/recogeapp?authSource=admin
+      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017/{MONGO_DATABASE_NAME}?authSource=admin
     depends_on:
       - mongo
 
