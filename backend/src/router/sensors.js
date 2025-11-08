@@ -1,5 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
+import DataPoint from "../models/DataPoint.js";
 
 const router = express.Router();
 const SensorSchema = new mongoose.Schema(
@@ -65,6 +66,36 @@ router.put("/:id", async (req, res) => {
     res.json({ data: { sensor } });
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+});
+
+router.get("/:id/datapoints", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid sensor ID" });
+    }
+
+    // Verify sensor exists
+    const sensor = await Sensor.findById(id);
+    if (!sensor) {
+      return res.status(404).json({ error: "Sensor not found" });
+    }
+
+    // Get datapoints for this sensor, sorted by timestamp descending (newest first)
+    const datapoints = await DataPoint.find({ sensorId: id })
+      .sort({ timestamp: -1 })
+      .lean();
+
+    res.json({
+      data: {
+        sensor,
+        datapoints,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
