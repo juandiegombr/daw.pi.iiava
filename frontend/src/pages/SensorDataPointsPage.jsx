@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorMessage from "../components/ErrorMessage";
+import SensorDataChart from "../components/SensorDataChart";
 
 export default function SensorDataPointsPage() {
   const { id } = useParams();
@@ -33,33 +34,6 @@ export default function SensorDataPointsPage() {
         setLoading(false);
       });
   }, [id]);
-
-  const formatValue = (value, type) => {
-    switch (type) {
-      case "float":
-        return typeof value === "number" ? value.toFixed(2) : value;
-      case "boolean":
-        return value ? "True" : "False";
-      case "int":
-        return value;
-      case "string":
-        return value;
-      default:
-        return value;
-    }
-  };
-
-  const formatTimestamp = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString("es-ES", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
 
   if (loading) {
     return (
@@ -123,7 +97,7 @@ export default function SensorDataPointsPage() {
         </div>
       )}
 
-      {/* Datapoints Table */}
+      {/* Datapoints Chart */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">
@@ -157,34 +131,8 @@ export default function SensorDataPointsPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fecha y Hora
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Valor
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {datapoints.map((datapoint, index) => (
-                  <tr
-                    key={datapoint._id || index}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatTimestamp(datapoint.timestamp)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {formatValue(datapoint.value, sensor.type)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="px-6 py-6">
+            <SensorDataChart datapoints={datapoints} sensor={sensor} />
           </div>
         )}
       </div>
