@@ -4,6 +4,7 @@ import ErrorMessage from "../components/ErrorMessage";
 import EmptyState from "../components/EmptyState";
 import SensorList from "../components/SensorList";
 import SensorForm from "../components/SensorForm";
+import SensorEditForm from "../components/SensorEditForm";
 
 export default function SensorsPage() {
   const [sensors, setSensors] = useState([]);
@@ -11,6 +12,7 @@ export default function SensorsPage() {
   const [error, setError] = useState(null);
   const [deletingSensorId, setDeletingSensorId] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
+  const [editingSensor, setEditingSensor] = useState(null);
 
   useEffect(() => {
     const API_URL = import.meta.env.VITE_API_URL;
@@ -54,6 +56,22 @@ export default function SensorsPage() {
     }
   };
 
+  const handleEditSensor = (sensor) => {
+    setEditingSensor(sensor);
+  };
+
+  const handleSensorUpdated = (updatedSensor) => {
+    setSensors((prev) =>
+      prev.map((sensor) =>
+        sensor._id === updatedSensor._id ? updatedSensor : sensor
+      )
+    );
+  };
+
+  const handleCloseEditForm = () => {
+    setEditingSensor(null);
+  };
+
   return (
     <>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -69,11 +87,19 @@ export default function SensorsPage() {
           <SensorList
             sensors={sensors}
             onDeleteSensor={handleDeleteSensor}
+            onEditSensor={handleEditSensor}
             deletingSensorId={deletingSensorId}
           />
         )}
       </main>
       <SensorForm onSensorAdded={handleSensorAdded} />
+      {editingSensor && (
+        <SensorEditForm
+          sensor={editingSensor}
+          onSensorUpdated={handleSensorUpdated}
+          onClose={handleCloseEditForm}
+        />
+      )}
     </>
   );
 }

@@ -1,6 +1,6 @@
 import SensorCard from "./SensorCard";
 
-export default function SensorList({ sensors, onDeleteSensor, deletingSensorId }) {
+export default function SensorList({ sensors, onDeleteSensor, onEditSensor, deletingSensorId }) {
   return (
     <>
       <div className="mb-8">
@@ -17,6 +17,7 @@ export default function SensorList({ sensors, onDeleteSensor, deletingSensorId }
             key={sensor._id}
             sensor={sensor}
             onDelete={onDeleteSensor}
+            onEdit={onEditSensor}
             deleting={deletingSensorId === sensor._id}
           />
         ))}
