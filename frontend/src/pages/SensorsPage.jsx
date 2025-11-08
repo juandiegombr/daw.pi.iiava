@@ -9,6 +9,8 @@ export default function SensorsPage() {
   const [sensors, setSensors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deletingSensorId, setDeletingSensorId] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
 
   useEffect(() => {
     const API_URL = import.meta.env.VITE_API_URL;
@@ -29,13 +31,47 @@ export default function SensorsPage() {
     setSensors((prev) => [...prev, newSensor]);
   };
 
+  const handleDeleteSensor = async (sensorId) => {
+    setDeletingSensorId(sensorId);
+    setDeleteError(null);
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${API_URL}/sensors/${sensorId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al eliminar el sensor");
+      }
+
+      setSensors((prev) => prev.filter((sensor) => sensor._id !== sensorId));
+    } catch (err) {
+      setDeleteError(err.message);
+    } finally {
+      setDeletingSensorId(null);
+    }
+  };
+
   return (
     <>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {deleteError && (
+          <div className="mb-4">
+            <ErrorMessage message={deleteError} />
+          </div>
+        )}
         {loading && <LoadingSpinner />}
         {error && <ErrorMessage message={error} />}
         {!loading && !error && sensors.length === 0 && <EmptyState />}
-        {!loading && !error && sensors.length > 0 && <SensorList sensors={sensors} />}
+        {!loading && !error && sensors.length > 0 && (
+          <SensorList
+            sensors={sensors}
+            onDeleteSensor={handleDeleteSensor}
+            deletingSensorId={deletingSensorId}
+          />
+        )}
       </main>
       <SensorForm onSensorAdded={handleSensorAdded} />
     </>

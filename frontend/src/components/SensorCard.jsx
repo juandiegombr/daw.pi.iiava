@@ -1,4 +1,4 @@
-export default function SensorCard({ sensor }) {
+export default function SensorCard({ sensor, onDelete, deleting }) {
   // Get type badge color
   const getTypeColor = (type) => {
     switch (type?.toLowerCase()) {
@@ -63,6 +63,19 @@ export default function SensorCard({ sensor }) {
             <p className="text-lg font-semibold text-gray-800 capitalize">{sensor.type}</p>
           </div>
         </div>
+
+        {onDelete && (
+          <div className="mt-4">
+            <button
+              onClick={() => onDelete(sensor._id)}
+              disabled={deleting}
+              className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-400 disabled:cursor-not-allowed"
+              aria-label={`Eliminar ${sensor.alias}`}
+            >
+              {deleting ? "Eliminando..." : "Eliminar"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

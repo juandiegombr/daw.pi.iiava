@@ -1,6 +1,6 @@
 import SensorCard from "./SensorCard";
 
-export default function SensorList({ sensors }) {
+export default function SensorList({ sensors, onDeleteSensor, deletingSensorId }) {
   return (
     <>
       <div className="mb-8">
@@ -13,7 +13,12 @@ export default function SensorList({ sensors }) {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {sensors.map((sensor) => (
-          <SensorCard key={sensor._id} sensor={sensor} />
+          <SensorCard
+            key={sensor._id}
+            sensor={sensor}
+            onDelete={onDeleteSensor}
+            deleting={deletingSensorId === sensor._id}
+          />
         ))}
       </div>
     </>
