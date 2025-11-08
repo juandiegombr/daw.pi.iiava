@@ -7,6 +7,13 @@ help: ## Show this help message
 
 .PHONY: dev-build dev-up dev-upf dev-down dev-rebuild logs-dev-backend seed
 .PHONY: prod-build prod-up prod-upf prod-down prod-rebuild logs-prod-backend
+.PHONY: test-frontend test-backend
+
+test-frontend: ## Run frontend tests
+	cd frontend && npm test
+
+test-backend: ## Run backend tests
+	cd backend && npm test
 
 dev-build: ## Build development Docker containers
 	$(COMPOSE) -f docker-compose.dev.yml build --no-cache
