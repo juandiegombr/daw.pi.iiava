@@ -15,11 +15,16 @@ The application is deployed on AWS using a modern, scalable architecture:
 │  ┌──────────────────────┐    ┌─────────────────────────┐    │
 │  │   /* (Frontend)      │    │   /api/* (Backend)      │    │
 │  │   ↓                  │    │   ↓                     │    │
-│  │   S3 Bucket          │    │   EC2 Origin            │    │
-│  └──────────────────────┘    └─────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-            ↑                              ↑
-            │                              │
+│  │   S3 Bucket          │    │   EC2 Origin            │────┼──────--------─┐
+│  └────────┬─────────────┘    └───────────┬─────────────┘    │               |
+└───────────┬──────────────────────────────┬──────────────────┘               |
+            |                              |                                  |
+    ┌───────┴─────────┐          ┌─────────┴──────────┐            ┌──────────┴─────────┐
+    │  S3 (Bucket)    │          │  EC2 (Node Server) │            |   EC2 (MongoDB)    │
+    │ Frontend: React │          │  Backend: Express  │            │   Database         │
+    │                 │          │  Port: 3000        │            │   Port: 27017      │
+    └───────┬─────────┘          └─────────┬──────────┘            └────────────────────┘
+            |                              |
     ┌───────┴─────────┐          ┌─────────┴──────────┐
     │  GitHub Actions │          │  GitHub Actions    │
     │  (Frontend CD)  │          │  (Backend CD)      │
@@ -165,6 +170,172 @@ Inbound Rules:
 
 ---
 
+## Database Infrastructure
+
+### **MongoDB EC2 Instance:**
+
+- **Purpose**: Host MongoDB database
+- **AMI**: Ubuntu 22.04 LTS
+- **Database Management System**: MongoDB Community Edition
+- **Connection**: Private access from backend EC2 instance
+
+### MongoDB Instance Configuration
+
+#### Initial Instance Setup
+
+1. **Launch EC2 Instance:**
+
+   - AMI: Ubuntu 22.04 LTS
+   - Instance Type: t2.micro or larger (t2.small recommended for production)
+   - Security Group: Allow MongoDB (27017) only from backend IP, SSH (22)
+   - Key Pair: Create and download for SSH access
+   - Storage: 20-30 GB minimum (expandable as needed)
+
+2. **Install MongoDB:**
+
+```bash
+ssh -i your-key.pem ubuntu@<MONGODB_EC2_PUBLIC_IP>
+
+# Update system
+sudo apt update -y
+sudo apt upgrade -y
+
+# Import MongoDB public key
+curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | \
+   sudo gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg \
+   --dearmor
+
+# Create list file for MongoDB
+echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+
+# Update repositories and install MongoDB
+sudo apt update
+sudo apt install -y mongodb-org
+
+# Start MongoDB service
+sudo systemctl start mongod
+sudo systemctl enable mongod
+
+# Verify status
+sudo systemctl status mongod
+```
+
+3. **Configure MongoDB for Remote Access:**
+
+```bash
+# Edit configuration file
+sudo nano /etc/mongod.conf
+
+# Modify the network section to allow remote connections:
+# net:
+#   port: 27017
+#   bindIp: 0.0.0.0  # Change from 127.0.0.1 to 0.0.0.0
+
+# Restart MongoDB to apply changes
+sudo systemctl restart mongod
+```
+
+4. **Create Administrative User and Database:**
+
+```bash
+# Connect to MongoDB
+mongosh
+
+# In the MongoDB shell:
+use admin
+db.createUser({
+  user: "admin",
+  pwd: "YOUR_SECURE_PASSWORD",
+  roles: [ { role: "userAdminAnyDatabase", db: "admin" }, "readWriteAnyDatabase" ]
+})
+
+# Create application database and user
+use app
+db.createUser({
+  user: "daw_app_user",
+  pwd: "YOUR_APPLICATION_PASSWORD",
+  roles: [ { role: "readWrite", db: "app" } ]
+})
+
+exit
+```
+
+5. **Enable Authentication:**
+
+```bash
+# Edit configuration file
+sudo nano /etc/mongod.conf
+
+# Add security section at the end of the file:
+security:
+  authorization: enabled
+
+# Save and exit (Ctrl+O, Enter, Ctrl+X)
+
+# Restart MongoDB to apply changes
+sudo systemctl restart mongod
+```
+
+#### Security Group Configuration
+
+**MongoDB Instance Security Group:**
+
+```
+Inbound Rules:
+- Type: SSH, Port: 22, Source: Your IP
+- Type: Custom TCP, Port: 27017, Source: Backend EC2 private IP or its security group
+```
+
+**Security Note:** NEVER expose port 27017 to `0.0.0.0/0` (public internet). Only allow access from specific IPs or security groups that need to connect.
+
+### Connecting from Backend
+
+To connect the backend to MongoDB, update the `.env` file on the backend EC2 instance:
+
+```bash
+# On the backend EC2 instance
+cd ~/daw.pi.iava/backend
+nano .env
+
+# Add/update the connection string:
+MONGODB_URI=mongodb://{DATABASE_USER}:{DATABASE_USER_PASSWORD}@<MONGODB_PRIVATE_IP>:27017/{DATABASE_NAME}
+
+# Restart the application
+pm2 restart api
+```
+
+### Monitoring and Maintenance
+
+**Check MongoDB status:**
+
+```bash
+sudo systemctl status mongod
+mongosh --eval "db.adminCommand('ping')"
+```
+
+**View logs:**
+
+```bash
+sudo tail -f /var/log/mongodb/mongod.log
+```
+
+**Monitor disk usage:**
+
+```bash
+df -h
+sudo du -sh /var/lib/mongodb
+```
+
+**Check active connections:**
+
+```bash
+mongosh -u admin -p --authenticationDatabase admin
+db.currentOp()
+db.serverStatus().connections
+```
+
+---
+
 ## CloudFront Configuration
 
 ### Distribution Setup
@@ -221,11 +392,13 @@ Both deployment workflows automatically invalidate CloudFront cache:
 
 **Monthly AWS Costs (approximate):**
 
-- EC2 t2.micro: ~$8-10/month
+- EC2 t2.micro (Backend): ~$8-10/month
+- EC2 t2.micro (MongoDB): ~$8-10/month
 - CloudFront: $0-5/month (low traffic)
 - S3: <$1/month (minimal storage)
+- EBS (MongoDB Storage): ~$2-4/month (20-30 GB)
 - Data Transfer: Variable based on traffic
 
-**Total: ~$10-20/month** for low-to-moderate traffic
+**Total: ~$20-35/month** for low-to-moderate traffic
 
 ---

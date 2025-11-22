@@ -15,11 +15,16 @@ La aplicación está desplegada en AWS utilizando una arquitectura moderna y esc
 │  ┌──────────────────────┐    ┌─────────────────────────┐    │
 │  │   /* (Frontend)      │    │   /api/* (Backend)      │    │
 │  │   ↓                  │    │   ↓                     │    │
-│  │   Bucket S3          │    │   Origen EC2            │    │
-│  └──────────────────────┘    └─────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-            ↑                              ↑
-            │                              │
+│  │   Bucket S3          │    │   Origen EC2            │────┼──────--------─┐
+│  └────────┬─────────────┘    └───────────┬─────────────┘    │               |
+└───────────┬──────────────────────────────┬──────────────────┘               |
+            |                              |                                  |
+    ┌───────┴─────────┐          ┌─────────┴──────────┐            ┌──────────┴─────────┐
+    │  S3 (Bucket)    │          │  EC2 (Node Server) │            |   EC2 (MongoDB)    │
+    │ Frontend: React │          │  Backend: Express  │            │   Base de Datos    │
+    │                 │          │  Puerto: 3000      │            │   Puerto: 27017    │
+    └───────┬─────────┘          └─────────┬──────────┘            └────────────────────┘
+            |                              |
     ┌───────┴─────────┐          ┌─────────┴──────────┐
     │  GitHub Actions │          │  GitHub Actions    │
     │  (Frontend CD)  │          │  (Backend CD)      │
@@ -165,6 +170,140 @@ Reglas de Entrada:
 
 ---
 
+## Infraestructura de Base de Datos
+
+### **Instancia EC2 MongoDB:**
+
+- **Propósito**: Alojar base de datos MongoDB
+- **AMI**: Ubuntu 22.04 LTS
+- **Sistema de Gestión de Base de Datos**: MongoDB Community Edition
+- **Conexión**: Acceso privado desde la instancia EC2 del backend
+
+### Configuración de la Instancia MongoDB
+
+#### Configuración Inicial de la Instancia
+
+1. **Lanzar Instancia EC2:**
+
+   - AMI: Ubuntu 22.04 LTS
+   - Tipo de Instancia: t2.micro o superior (t2.small recomendado para producción)
+   - Grupo de Seguridad: Permitir MongoDB (27017) solo desde IP del backend, SSH (22)
+   - Par de Claves: Crear y descargar para acceso SSH
+   - Almacenamiento: 20-30 GB mínimo (expandible según necesidades)
+
+2. **Instalar MongoDB:**
+
+```bash
+ssh -i tu-clave.pem ubuntu@<MONGODB_EC2_PUBLIC_IP>
+
+# Actualizar sistema
+sudo apt update -y
+sudo apt upgrade -y
+
+# Importar clave pública de MongoDB
+curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | \
+   sudo gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg \
+   --dearmor
+
+# Crear archivo de lista para MongoDB
+echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+
+# Actualizar repositorios e instalar MongoDB
+sudo apt update
+sudo apt install -y mongodb-org
+
+# Iniciar servicio MongoDB
+sudo systemctl start mongod
+sudo systemctl enable mongod
+
+# Verificar estado
+sudo systemctl status mongod
+```
+
+3. **Configurar MongoDB para Acceso Remoto:**
+
+```bash
+# Editar archivo de configuración
+sudo nano /etc/mongod.conf
+
+# Modificar la sección de red para permitir conexiones remotas:
+# net:
+#   port: 27017
+#   bindIp: 0.0.0.0  # Cambiar de 127.0.0.1 a 0.0.0.0
+
+# Reiniciar MongoDB para aplicar cambios
+sudo systemctl restart mongod
+```
+
+4. **Crear Usuario Administrativo y Base de Datos:**
+
+```bash
+# Conectar a MongoDB
+mongosh
+
+# En el shell de MongoDB:
+use admin
+db.createUser({
+  user: "admin",
+  pwd: "TU_CONTRASEÑA_SEGURA",
+  roles: [ { role: "userAdminAnyDatabase", db: "admin" }, "readWriteAnyDatabase" ]
+})
+
+# Crear base de datos de aplicación y usuario
+use app
+db.createUser({
+  user: "daw_app_user",
+  pwd: "TU_CONTRASEÑA_APLICACION",
+  roles: [ { role: "readWrite", db: "app" } ]
+})
+
+exit
+```
+
+5. **Habilitar Autenticación:**
+
+```bash
+# Editar archivo de configuración
+sudo nano /etc/mongod.conf
+
+# Añadir al final del archivo la sección de seguridad:
+security:
+  authorization: enabled
+
+# Guardar y salir (Ctrl+O, Enter, Ctrl+X)
+
+# Reiniciar MongoDB para aplicar cambios
+sudo systemctl restart mongod
+```
+
+#### Configuración del Grupo de Seguridad
+
+**Grupo de Seguridad de la Instancia MongoDB:**
+
+```
+Reglas de Entrada:
+- Tipo: SSH, Puerto: 22, Origen: Tu IP
+- Tipo: TCP Personalizado, Puerto: 27017, Origen: IP privada de la instancia EC2 del backend o su grupo de seguridad
+```
+
+**Nota de Seguridad:** NUNCA exponer el puerto 27017 a `0.0.0.0/0` (internet público). Solo permitir acceso desde las IPs o grupos de seguridad específicos que necesiten conectarse.
+
+### Conexión desde el Backend
+
+Para conectar el backend a MongoDB, actualizar el archivo `.env` en la instancia EC2 del backend:
+
+```bash
+# En la instancia EC2 del backend
+cd ~/daw.pi.iava/backend
+nano .env
+
+# Añadir/actualizar la cadena de conexión:
+MONGODB_URI=mongodb://{DATABASE_USER}:{DATABASE_USER_PASSWORD}@<MONGODB_PRIVATE_IP>:27017/{DATABASE_NAME}
+
+# Reiniciar la aplicación
+pm2 restart api
+```
+
 ## Configuración de CloudFront
 
 ### Configuración de la Distribución
@@ -221,11 +360,13 @@ Ambos flujos de despliegue invalidan automáticamente la caché de CloudFront:
 
 **Costos Mensuales de AWS (aproximados):**
 
-- EC2 t2.micro: ~$8-10/mes
+- EC2 t2.micro (Backend): ~$8-10/mes
+- EC2 t2.micro (MongoDB): ~$8-10/mes
 - CloudFront: $0-5/mes (tráfico bajo)
 - S3: <$1/mes (almacenamiento mínimo)
+- EBS (Almacenamiento MongoDB): ~$2-4/mes (20-30 GB)
 - Transferencia de Datos: Variable según el tráfico
 
-**Total: ~$10-20/mes** para tráfico bajo a moderado
+**Total: ~$20-35/mes** para tráfico bajo a moderado
 
 ---
