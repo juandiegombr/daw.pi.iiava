@@ -22,6 +22,26 @@ Una aplicación web completa que demuestra prácticas profesionales de desarroll
 
 ---
 
+## Capturas de Pantalla
+
+### Listado de Sensores
+
+![Listado de Sensores](assets/listado.png)
+
+### Detalle de Sensor
+
+![Detalle de Sensor](assets/detalle.png)
+
+### Crear Sensor
+
+![Crear Sensor](assets/crear.png)
+
+### Editar Sensor
+
+![Editar Sensor](assets/editar.png)
+
+---
+
 ## Stack Tecnológico
 
 ### Backend
@@ -48,23 +68,27 @@ Una aplicación web completa que demuestra prácticas profesionales de desarroll
 
 ## Arquitectura
 
+La aplicación está desplegada en AWS utilizando la siguiente arquitectura:
+
 ```
-┌─────────────────┐
-│   Frontend      │
-│   (React)       │
-│   Port: 5173    │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│   Backend API   │
-│   (Express)     │
-│   Port: 3000    │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│   MongoDB       │
-│   Port: 27017   │
-└─────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                        CloudFront                           │
+│                                                             │
+│  ┌──────────────────────┐    ┌─────────────────────────┐    │
+│  │   /* (Frontend)      │    │   /api/* (Backend)      │    │
+│  │   ↓                  │    │   ↓                     │    │
+│  │   Bucket S3          │    │   Origen EC2            │────┼──────--------─┐
+│  └────────┬─────────────┘    └───────────┬─────────────┘    │               |
+└───────────┬──────────────────────────────┬──────────────────┘               |
+            |                              |                                  |
+    ┌───────┴─────────┐          ┌─────────┴──────────┐            ┌──────────┴─────────┐
+    │  S3 (Bucket)    │          │  EC2 (Node Server) │            |   EC2 (MongoDB)    │
+    │ Frontend: React │          │  Backend: Express  │            │   Base de Datos    │
+    │                 │          │  Puerto: 3000      │            │   Puerto: 27017    │
+    └───────┬─────────┘          └─────────┬──────────┘            └────────────────────┘
+            |                              |
+    ┌───────┴─────────┐          ┌─────────┴──────────┐
+    │  GitHub Actions │          │  GitHub Actions    │
+    │  (Frontend CD)  │          │  (Backend CD)      │
+    └─────────────────┘          └────────────────────┘
 ```
