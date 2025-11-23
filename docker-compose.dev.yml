@@ -40,6 +40,8 @@ services:
     container_name: frontend
     ports:
       - "5173:5173"
+    environment:
+      - GIT_COMMIT_HASH=${GIT_COMMIT_HASH:-dev}
     volumes:
       - ./frontend:/app
       - /app/node_modules

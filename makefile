@@ -19,10 +19,10 @@ dev-build: ## Build development Docker containers
 	$(COMPOSE) -f docker-compose.dev.yml build --no-cache
 
 dev-up: ## Start development environment (detached)
-	$(COMPOSE) -f docker-compose.dev.yml up -d
+	GIT_COMMIT_HASH=$$(git rev-parse --short HEAD 2>/dev/null || echo "dev") $(COMPOSE) -f docker-compose.dev.yml up -d
 
 dev-upf: ## Start development environment (foreground)
-	$(COMPOSE) -f docker-compose.dev.yml up
+	GIT_COMMIT_HASH=$$(git rev-parse --short HEAD 2>/dev/null || echo "dev") $(COMPOSE) -f docker-compose.dev.yml up
 
 dev-down: ## Stop development environment
 	$(COMPOSE) -f docker-compose.dev.yml down
