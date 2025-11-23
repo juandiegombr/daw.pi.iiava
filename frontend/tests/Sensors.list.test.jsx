@@ -33,7 +33,7 @@ describe("Sensor List", () => {
     render(<App />);
     await screen.findByText("Sensores Activos");
 
-    expect(screen.getByRole("heading", { name: /Industrial Monitor/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "⚙️ Industrial Monitor" })).toBeInTheDocument();
     expect(
       screen.getByText(
         "Monitor de señales de sensores de máquinas industriales en tiempo real"
@@ -49,7 +49,7 @@ describe("Sensor List", () => {
     render(<App />);
     await screen.findByText("No hay sensores disponibles en este momento");
 
-    expect(screen.getByRole("heading", { name: /Industrial Monitor/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "⚙️ Industrial Monitor" })).toBeInTheDocument();
     expect(
       screen.getByText(
         "Monitor de señales de sensores de máquinas industriales en tiempo real"

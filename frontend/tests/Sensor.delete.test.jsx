@@ -46,7 +46,7 @@ describe("Sensor Deletion", () => {
 
     // Confirmation dialog should appear
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText(/¿Estás seguro de que deseas eliminar el sensor "Temperature Sensor"\?/)).toBeInTheDocument();
+    expect(screen.getByText('¿Estás seguro de que deseas eliminar el sensor "Temperature Sensor"? Esta acción no se puede deshacer.')).toBeInTheDocument();
 
     // Confirm deletion
     await user.click(screen.getByRole("button", { name: "Eliminar" }));
@@ -191,7 +191,7 @@ describe("Sensor Deletion", () => {
 
     // Confirmation dialog should appear
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText(/¿Estás seguro de que deseas eliminar el sensor "Temperature Sensor"\?/)).toBeInTheDocument();
+    expect(screen.getByText('¿Estás seguro de que deseas eliminar el sensor "Temperature Sensor"? Esta acción no se puede deshacer.')).toBeInTheDocument();
 
     // Cancel deletion
     await user.click(screen.getByRole("button", { name: "Cancelar" }));
@@ -266,7 +266,6 @@ describe("Sensor Deletion", () => {
     await user.click(screen.getByRole("button", { name: "Eliminar My Custom Sensor Name" }));
 
     // Confirmation dialog should show the exact sensor name
-    expect(screen.getByText(/¿Estás seguro de que deseas eliminar el sensor "My Custom Sensor Name"\?/)).toBeInTheDocument();
-    expect(screen.getByText(/Esta acción no se puede deshacer/)).toBeInTheDocument();
+    expect(screen.getByText('¿Estás seguro de que deseas eliminar el sensor "My Custom Sensor Name"? Esta acción no se puede deshacer.')).toBeInTheDocument();
   });
 });
