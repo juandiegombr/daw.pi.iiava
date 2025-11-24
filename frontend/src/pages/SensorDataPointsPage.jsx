@@ -37,7 +37,7 @@ export default function SensorDataPointsPage() {
 
   if (loading) {
     return (
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <LoadingSpinner />
       </main>
     );
@@ -45,7 +45,7 @@ export default function SensorDataPointsPage() {
 
   if (error) {
     return (
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <ErrorMessage message={error} />
         <Link
           to="/"
@@ -58,7 +58,7 @@ export default function SensorDataPointsPage() {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Back Button */}
       <Link
         to="/"
