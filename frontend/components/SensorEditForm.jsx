@@ -14,8 +14,7 @@ export default function SensorEditForm({ sensor, onSensorUpdated, onClose }) {
     setError(null);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${API_URL}/sensors/${sensor._id}`, {
+      const response = await fetch(`/api/sensors/${sensor._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

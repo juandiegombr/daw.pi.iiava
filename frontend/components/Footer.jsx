@@ -1,7 +1,7 @@
 export default function Footer() {
-  // These variables are injected at build time by Vite
-  const commitHash = __COMMIT_HASH__;
-  const buildTime = __BUILD_TIME__;
+  // These variables are injected at build time by Next.js
+  const commitHash = process.env.NEXT_PUBLIC_COMMIT_HASH || 'dev';
+  const buildTime = process.env.NEXT_PUBLIC_BUILD_TIME || new Date().toISOString();
 
   const formatBuildTime = (isoString) => {
     try {
@@ -25,7 +25,7 @@ export default function Footer() {
           <div className="mb-2 sm:mb-0">
             <span className="font-semibold">Industrial Monitor</span>
             <span className="mx-2">·</span>
-            <span>&copy; {new Date().getFullYear()}</span>
+            <span suppressHydrationWarning>&copy; {new Date().getFullYear()}</span>
           </div>
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-1">
@@ -40,7 +40,7 @@ export default function Footer() {
               <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span title={`Build Time: ${buildTime}`}>
+              <span title={`Build Time: ${buildTime}`} suppressHydrationWarning>
                 {formatBuildTime(buildTime)}
               </span>
             </div>

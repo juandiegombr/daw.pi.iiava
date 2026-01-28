@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   mongo:
     image: mongo:latest
@@ -30,11 +28,16 @@ services:
       - mongo
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        - GIT_COMMIT_HASH=${GIT_COMMIT_HASH:-unknown}
     container_name: frontend
     restart: always
     ports:
-      - "8080:80"
+      - "8080:3000"
+    environment:
+      - API_URL=http://backend:3000
     depends_on:
       - backend
 

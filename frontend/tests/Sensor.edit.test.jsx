@@ -1,9 +1,22 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import App from "../src/App";
+import SensorsPage from "../pages/index";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 global.fetch = vi.fn();
+
+// Helper to render the full app layout
+function renderApp(pageProps) {
+  return render(
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-blue-50 flex flex-col">
+      <Header />
+      <SensorsPage {...pageProps} />
+      <Footer />
+    </div>
+  );
+}
 
 describe("Sensor Edit", () => {
   const mockSensors = [
@@ -21,21 +34,18 @@ describe("Sensor Edit", () => {
     },
   ];
 
-  beforeEach(() => {
-    vi.stubEnv("VITE_API_URL", "http://test.com/api");
-    fetch.mockResolvedValueOnce({
-      json: async () => ({ data: { sensors: mockSensors } }),
-    });
-  });
-
   afterEach(() => {
     fetch.mockClear();
   });
 
   it("WHEN user clicks edit button THEN displays sensor edit form", async () => {
     const user = userEvent.setup();
-    render(<App />);
-    await screen.findByText("Temperature Sensor");
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
+    });
+
+    expect(screen.getByText("Temperature Sensor")).toBeInTheDocument();
 
     const editButton = screen.getByRole("button", {
       name: "Editar Temperature Sensor",
@@ -55,8 +65,12 @@ describe("Sensor Edit", () => {
 
   it("WHEN user edits sensor alias THEN updates sensor in list", async () => {
     const user = userEvent.setup();
-    render(<App />);
-    await screen.findByText("Temperature Sensor");
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
+    });
+
+    expect(screen.getByText("Temperature Sensor")).toBeInTheDocument();
 
     await user.click(
       screen.getByRole("button", { name: "Editar Temperature Sensor" })
@@ -93,8 +107,12 @@ describe("Sensor Edit", () => {
 
   it("WHEN user edits sensor type THEN updates sensor in list", async () => {
     const user = userEvent.setup();
-    render(<App />);
-    await screen.findByText("Temperature Sensor");
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
+    });
+
+    expect(screen.getByText("Temperature Sensor")).toBeInTheDocument();
 
     const editButton = screen.getByRole("button", {
       name: "Editar Temperature Sensor",
@@ -132,8 +150,12 @@ describe("Sensor Edit", () => {
 
   it("WHEN user edits both alias and type THEN updates both fields", async () => {
     const user = userEvent.setup();
-    render(<App />);
-    await screen.findByText("Temperature Sensor");
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
+    });
+
+    expect(screen.getByText("Temperature Sensor")).toBeInTheDocument();
 
     const editButton = screen.getByRole("button", {
       name: "Editar Temperature Sensor",
@@ -178,8 +200,12 @@ describe("Sensor Edit", () => {
 
   it("WHEN user clicks cancel THEN closes edit form without saving", async () => {
     const user = userEvent.setup();
-    render(<App />);
-    await screen.findByText("Temperature Sensor");
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
+    });
+
+    expect(screen.getByText("Temperature Sensor")).toBeInTheDocument();
 
     const editButton = screen.getByRole("button", {
       name: "Editar Temperature Sensor",
@@ -201,8 +227,12 @@ describe("Sensor Edit", () => {
 
   it("WHEN edit request fails THEN displays error message", async () => {
     const user = userEvent.setup();
-    render(<App />);
-    await screen.findByText("Temperature Sensor");
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
+    });
+
+    expect(screen.getByText("Temperature Sensor")).toBeInTheDocument();
 
     const editButton = screen.getByRole("button", {
       name: "Editar Temperature Sensor",
@@ -232,8 +262,12 @@ describe("Sensor Edit", () => {
 
   it("WHEN editing sensor THEN calls PUT endpoint with correct data", async () => {
     const user = userEvent.setup();
-    render(<App />);
-    await screen.findByText("Temperature Sensor");
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
+    });
+
+    expect(screen.getByText("Temperature Sensor")).toBeInTheDocument();
 
     const editButton = screen.getByRole("button", {
       name: "Editar Temperature Sensor",
@@ -271,7 +305,7 @@ describe("Sensor Edit", () => {
     );
 
     expect(fetch).toHaveBeenCalledWith(
-      "http://test.com/api/sensors/1",
+      "/api/sensors/1",
       expect.objectContaining({
         method: "PUT",
         headers: { "Content-Type": "application/json" },

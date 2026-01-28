@@ -1,38 +1,42 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
-import App from "../src/App";
+import SensorsPage from "../pages/index";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 global.fetch = vi.fn();
 
-describe("Sensor List", () => {
-  beforeEach(() => {
-    vi.stubEnv("VITE_API_URL", "http://test.com/api");
-  });
+// Helper to render the full app layout
+function renderApp(pageProps) {
+  return render(
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-blue-50 flex flex-col">
+      <Header />
+      <SensorsPage {...pageProps} />
+      <Footer />
+    </div>
+  );
+}
 
+describe("Sensor List", () => {
   afterEach(() => {
     fetch.mockClear();
   });
 
   it("WHEN sensors are loaded THEN renders app header with title and description", async () => {
-    fetch.mockResolvedValueOnce({
-      json: async () => ({
-        data: {
-          sensors: [
-            {
-              _id: "1",
-              alias: "Temperature Sensor",
-              type: "float",
-              createdAt: "2024-01-01T10:00:00.000Z",
-              updatedAt: "2024-01-02T15:30:00.000Z",
-            },
-          ],
+    renderApp({
+      initialSensors: [
+        {
+          _id: "1",
+          alias: "Temperature Sensor",
+          type: "float",
+          createdAt: "2024-01-01T10:00:00.000Z",
+          updatedAt: "2024-01-02T15:30:00.000Z",
         },
-      }),
+      ],
+      error: null,
     });
 
-    render(<App />);
-    await screen.findByText("Sensores Activos");
-
+    expect(screen.getByText("Sensores Activos")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "⚙️ Industrial Monitor" })).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -42,13 +46,12 @@ describe("Sensor List", () => {
   });
 
   it("WHEN no sensors exist THEN renders header and empty state message", async () => {
-    fetch.mockResolvedValueOnce({
-      json: async () => ({ data: { sensors: [] } }),
+    renderApp({
+      initialSensors: [],
+      error: null,
     });
 
-    render(<App />);
-    await screen.findByText("No hay sensores disponibles en este momento");
-
+    expect(screen.getByText("No hay sensores disponibles en este momento")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "⚙️ Industrial Monitor" })).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -60,17 +63,7 @@ describe("Sensor List", () => {
     ).toBeInTheDocument();
   });
 
-  it("WHEN fetching sensors THEN shows loading spinner", () => {
-    fetch.mockImplementationOnce(() => new Promise(() => {}));
-
-    render(<App />);
-
-    expect(
-      screen.getByRole("status", { name: "Cargando sensores" })
-    ).toBeInTheDocument();
-  });
-
-  it("WHEN API call succeeds THEN displays sensors", async () => {
+  it("WHEN initialSensors provided THEN displays sensors", async () => {
     const mockSensors = [
       {
         _id: "1",
@@ -88,53 +81,41 @@ describe("Sensor List", () => {
       },
     ];
 
-    fetch.mockResolvedValueOnce({
-      json: async () => ({ data: { sensors: mockSensors } }),
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
     });
 
-    render(<App />);
-    await screen.findByText("Sensores Activos");
-
+    expect(screen.getByText("Sensores Activos")).toBeInTheDocument();
     expect(screen.getByText("(2 sensores)")).toBeInTheDocument();
     expect(screen.getByRole("article", { name: "Sensor Temperature Sensor" })).toBeInTheDocument();
     expect(screen.getByRole("article", { name: "Sensor Pressure Sensor" })).toBeInTheDocument();
   });
 
   it("WHEN no sensors exist THEN displays empty state", async () => {
-    fetch.mockResolvedValueOnce({
-      json: async () => ({ data: { sensors: [] } }),
+    renderApp({
+      initialSensors: [],
+      error: null,
     });
 
-    render(<App />);
-    await screen.findByText("No hay sensores disponibles en este momento");
-
+    expect(
+      screen.getByText("No hay sensores disponibles en este momento")
+    ).toBeInTheDocument();
     expect(
       screen.getByText("Esperando configuración de sensores...")
     ).toBeInTheDocument();
   });
 
-  it("WHEN API call fails THEN displays error message", async () => {
+  it("WHEN error provided THEN displays error message", async () => {
     const errorMessage = "Network error";
-    fetch.mockRejectedValueOnce(new Error(errorMessage));
 
-    render(<App />);
-    await screen.findByText("Error al cargar los sensores");
+    renderApp({
+      initialSensors: [],
+      error: errorMessage,
+    });
 
+    expect(screen.getByText("Error al cargar los sensores")).toBeInTheDocument();
     expect(screen.getByText(errorMessage)).toBeInTheDocument();
-  });
-
-  it("WHEN app loads THEN fetches sensors from correct API endpoint", async () => {
-    fetch.mockResolvedValueOnce({
-      json: async () => ({ data: { sensors: [] } }),
-    });
-
-    render(<App />);
-    await screen.findByText("No hay sensores disponibles en este momento");
-
-    expect(fetch).toHaveBeenCalledWith("http://test.com/api/sensors", {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
   });
 
   it("WHEN sensor is displayed THEN shows all sensor card details", async () => {
@@ -145,12 +126,12 @@ describe("Sensor List", () => {
       createdAt: "2024-01-15T14:30:00.000Z",
     };
 
-    fetch.mockResolvedValueOnce({
-      json: async () => ({ data: { sensors: [mockSensor] } }),
+    renderApp({
+      initialSensors: [mockSensor],
+      error: null,
     });
 
-    render(<App />);
-    await screen.findByText("Temperature Sensor");
+    expect(screen.getByText("Temperature Sensor")).toBeInTheDocument();
 
     const sensorCard = screen.getByRole("article", { name: "Sensor Temperature Sensor" });
 
@@ -178,12 +159,12 @@ describe("Sensor List", () => {
       { _id: "4", alias: "String Sensor", type: "string", createdAt: "2024-01-01T10:00:00.000Z" },
     ];
 
-    fetch.mockResolvedValueOnce({
-      json: async () => ({ data: { sensors: mockSensors } }),
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
     });
 
-    render(<App />);
-    await screen.findByText("Sensores Activos");
+    expect(screen.getByText("Sensores Activos")).toBeInTheDocument();
 
     // Int Sensor card
     const intSensorCard = screen.getByRole("article", { name: "Sensor Int Sensor" });

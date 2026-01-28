@@ -1,15 +1,24 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import App from "../src/App";
+import SensorsPage from "../pages/index";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 global.fetch = vi.fn();
 
-describe("Sensor Deletion", () => {
-  beforeEach(() => {
-    vi.stubEnv("VITE_API_URL", "http://test.com/api");
-  });
+// Helper to render the full app layout
+function renderApp(pageProps) {
+  return render(
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-blue-50 flex flex-col">
+      <Header />
+      <SensorsPage {...pageProps} />
+      <Footer />
+    </div>
+  );
+}
 
+describe("Sensor Deletion", () => {
   afterEach(() => {
     fetch.mockClear();
   });
@@ -28,18 +37,18 @@ describe("Sensor Deletion", () => {
       },
     ];
 
-    fetch
-      .mockResolvedValueOnce({
-        json: async () => ({ data: { sensors: mockSensors } }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true }),
-      });
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true }),
+    });
 
     const user = userEvent.setup();
-    render(<App />);
-    await screen.findByRole("heading", { name: "Sensores Activos (2 sensores)" });
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
+    });
+
+    expect(screen.getByRole("heading", { name: "Sensores Activos (2 sensores)" })).toBeInTheDocument();
 
     // Click delete button
     await user.click(screen.getByRole("button", { name: "Eliminar Temperature Sensor" }));
@@ -55,7 +64,7 @@ describe("Sensor Deletion", () => {
 
     expect(screen.queryByText("Temperature Sensor")).not.toBeInTheDocument();
     expect(screen.getByText("Pressure Sensor")).toBeInTheDocument();
-    expect(fetch).toHaveBeenCalledWith("http://test.com/api/sensors/1", {
+    expect(fetch).toHaveBeenCalledWith("/api/sensors/1", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     });
@@ -70,18 +79,18 @@ describe("Sensor Deletion", () => {
       },
     ];
 
-    fetch
-      .mockResolvedValueOnce({
-        json: async () => ({ data: { sensors: mockSensors } }),
-      })
-      .mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({}),
-      });
+    fetch.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({}),
+    });
 
     const user = userEvent.setup();
-    render(<App />);
-    await screen.findByRole("heading", { name: "Sensores Activos (1 sensor)" });
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
+    });
+
+    expect(screen.getByRole("heading", { name: "Sensores Activos (1 sensor)" })).toBeInTheDocument();
 
     // Click delete button
     await user.click(screen.getByRole("button", { name: "Eliminar Temperature Sensor" }));
@@ -102,18 +111,18 @@ describe("Sensor Deletion", () => {
       },
     ];
 
-    fetch
-      .mockResolvedValueOnce({
-        json: async () => ({ data: { sensors: mockSensors } }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true }),
-      });
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true }),
+    });
 
     const user = userEvent.setup();
-    render(<App />);
-    await screen.findByRole("heading", { name: "Sensores Activos (1 sensor)" });
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
+    });
+
+    expect(screen.getByRole("heading", { name: "Sensores Activos (1 sensor)" })).toBeInTheDocument();
 
     // Click delete button
     await user.click(screen.getByRole("button", { name: "Eliminar Temperature Sensor" }));
@@ -133,27 +142,27 @@ describe("Sensor Deletion", () => {
       },
     ];
 
-    fetch
-      .mockResolvedValueOnce({
-        json: async () => ({ data: { sensors: mockSensors } }),
-      })
-      .mockImplementationOnce(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(
-              () =>
-                resolve({
-                  ok: true,
-                  json: async () => ({ success: true }),
-                }),
-              100
-            )
+    fetch.mockImplementationOnce(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(
+            () =>
+              resolve({
+                ok: true,
+                json: async () => ({ success: true }),
+              }),
+            100
           )
-      );
+        )
+    );
 
     const user = userEvent.setup();
-    render(<App />);
-    await screen.findByRole("heading", { name: "Sensores Activos (1 sensor)" });
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
+    });
+
+    expect(screen.getByRole("heading", { name: "Sensores Activos (1 sensor)" })).toBeInTheDocument();
 
     // Click delete button
     await user.click(screen.getByRole("button", { name: "Eliminar Temperature Sensor" }));
@@ -178,13 +187,13 @@ describe("Sensor Deletion", () => {
       },
     ];
 
-    fetch.mockResolvedValueOnce({
-      json: async () => ({ data: { sensors: mockSensors } }),
+    const user = userEvent.setup();
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
     });
 
-    const user = userEvent.setup();
-    render(<App />);
-    await screen.findByRole("heading", { name: "Sensores Activos (2 sensores)" });
+    expect(screen.getByRole("heading", { name: "Sensores Activos (2 sensores)" })).toBeInTheDocument();
 
     // Click delete button
     await user.click(screen.getByRole("button", { name: "Eliminar Temperature Sensor" }));
@@ -205,7 +214,7 @@ describe("Sensor Deletion", () => {
     expect(screen.getByRole("heading", { name: "Sensores Activos (2 sensores)" })).toBeInTheDocument();
 
     // Delete API should not have been called
-    expect(fetch).toHaveBeenCalledTimes(1); // Only the initial fetch for sensors list
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("WHEN user clicks outside confirmation dialog THEN dialog closes and sensor remains", async () => {
@@ -217,13 +226,13 @@ describe("Sensor Deletion", () => {
       },
     ];
 
-    fetch.mockResolvedValueOnce({
-      json: async () => ({ data: { sensors: mockSensors } }),
+    const user = userEvent.setup();
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
     });
 
-    const user = userEvent.setup();
-    render(<App />);
-    await screen.findByRole("heading", { name: "Sensores Activos (1 sensor)" });
+    expect(screen.getByRole("heading", { name: "Sensores Activos (1 sensor)" })).toBeInTheDocument();
 
     // Click delete button
     await user.click(screen.getByRole("button", { name: "Eliminar Temperature Sensor" }));
@@ -242,7 +251,7 @@ describe("Sensor Deletion", () => {
     expect(screen.getByText("Temperature Sensor")).toBeInTheDocument();
 
     // Delete API should not have been called
-    expect(fetch).toHaveBeenCalledTimes(1); // Only the initial fetch for sensors list
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("WHEN confirmation dialog is shown THEN displays correct sensor name", async () => {
@@ -254,13 +263,13 @@ describe("Sensor Deletion", () => {
       },
     ];
 
-    fetch.mockResolvedValueOnce({
-      json: async () => ({ data: { sensors: mockSensors } }),
+    const user = userEvent.setup();
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
     });
 
-    const user = userEvent.setup();
-    render(<App />);
-    await screen.findByText("My Custom Sensor Name");
+    expect(screen.getByText("My Custom Sensor Name")).toBeInTheDocument();
 
     // Click delete button
     await user.click(screen.getByRole("button", { name: "Eliminar My Custom Sensor Name" }));

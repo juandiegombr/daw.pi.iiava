@@ -1,7 +1,21 @@
+# Dependencies
 /frontend/node_modules
-/frontend/dist
-
 /backend/node_modules
 
+# Build outputs
+/frontend/dist
+/frontend/.next
+/frontend/out
+
+# Environment files
 /.env
 /backend/.env
+
+# Debug logs
+npm-debug.log*
+
+# OS
+.DS_Store
+
+# Testing
+/frontend/coverage

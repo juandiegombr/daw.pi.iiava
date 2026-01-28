@@ -1,27 +1,36 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import App from "../src/App";
+import SensorsPage from "../pages/index";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 global.fetch = vi.fn();
 
-describe("Sensor Creation", () => {
-  beforeEach(() => {
-    vi.stubEnv("VITE_API_URL", "http://test.com/api");
-  });
+// Helper to render the full app layout
+function renderApp(pageProps) {
+  return render(
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-blue-50 flex flex-col">
+      <Header />
+      <SensorsPage {...pageProps} />
+      <Footer />
+    </div>
+  );
+}
 
+describe("Sensor Creation", () => {
   afterEach(() => {
     fetch.mockClear();
   });
 
   it("WHEN user clicks add button THEN displays sensor creation form", async () => {
-    fetch.mockResolvedValueOnce({
-      json: async () => ({ data: { sensors: [] } }),
+    const user = userEvent.setup();
+    renderApp({
+      initialSensors: [],
+      error: null,
     });
 
-    const user = userEvent.setup();
-    render(<App />);
-    await screen.findByText("No hay sensores disponibles en este momento");
+    expect(screen.getByText("No hay sensores disponibles en este momento")).toBeInTheDocument();
 
     const addButton = screen.getByRole("button", { name: "Nuevo Sensor" });
     await user.click(addButton);
@@ -38,26 +47,26 @@ describe("Sensor Creation", () => {
   });
 
   it("WHEN user fills form and submits THEN creates new sensor", async () => {
-    fetch
-      .mockResolvedValueOnce({
-        json: async () => ({ data: { sensors: [] } }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          data: {
-            sensor: {
-              _id: "123",
-              alias: "Temperature Sensor",
-              type: "float",
-            },
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: {
+          sensor: {
+            _id: "123",
+            alias: "Temperature Sensor",
+            type: "float",
           },
-        }),
-      });
+        },
+      }),
+    });
 
     const user = userEvent.setup();
-    render(<App />);
-    await screen.findByText("No hay sensores disponibles en este momento");
+    renderApp({
+      initialSensors: [],
+      error: null,
+    });
+
+    expect(screen.getByText("No hay sensores disponibles en este momento")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Nuevo Sensor" }));
 
@@ -71,7 +80,7 @@ describe("Sensor Creation", () => {
     await user.click(screen.getByRole("button", { name: "Crear Sensor" }));
 
     expect(await screen.findByText("Temperature Sensor")).toBeInTheDocument();
-    expect(fetch).toHaveBeenCalledWith("http://test.com/api/sensors", {
+    expect(fetch).toHaveBeenCalledWith("/api/sensors", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ alias: "Temperature Sensor", type: "float" }),
@@ -79,13 +88,13 @@ describe("Sensor Creation", () => {
   });
 
   it("WHEN user clicks cancel THEN closes sensor creation form", async () => {
-    fetch.mockResolvedValueOnce({
-      json: async () => ({ data: { sensors: [] } }),
+    const user = userEvent.setup();
+    renderApp({
+      initialSensors: [],
+      error: null,
     });
 
-    const user = userEvent.setup();
-    render(<App />);
-    await screen.findByText("No hay sensores disponibles en este momento");
+    expect(screen.getByText("No hay sensores disponibles en este momento")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Nuevo Sensor" }));
 
@@ -103,18 +112,18 @@ describe("Sensor Creation", () => {
   });
 
   it("WHEN sensor creation fails THEN displays error message", async () => {
-    fetch
-      .mockResolvedValueOnce({
-        json: async () => ({ data: { sensors: [] } }),
-      })
-      .mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({}),
-      });
+    fetch.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({}),
+    });
 
     const user = userEvent.setup();
-    render(<App />);
-    await screen.findByText("No hay sensores disponibles en este momento");
+    renderApp({
+      initialSensors: [],
+      error: null,
+    });
+
+    expect(screen.getByText("No hay sensores disponibles en este momento")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Nuevo Sensor" }));
 
@@ -131,31 +140,31 @@ describe("Sensor Creation", () => {
   });
 
   it("WHEN creating sensor THEN shows loading state", async () => {
-    fetch
-      .mockResolvedValueOnce({
-        json: async () => ({ data: { sensors: [] } }),
-      })
-      .mockImplementationOnce(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(
-              () =>
-                resolve({
-                  ok: true,
-                  json: async () => ({
-                    data: {
-                      sensor: { _id: "123", alias: "Test", type: "int" },
-                    },
-                  }),
+    fetch.mockImplementationOnce(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(
+            () =>
+              resolve({
+                ok: true,
+                json: async () => ({
+                  data: {
+                    sensor: { _id: "123", alias: "Test", type: "int" },
+                  },
                 }),
-              100
-            )
+              }),
+            100
           )
-      );
+        )
+    );
 
     const user = userEvent.setup();
-    render(<App />);
-    await screen.findByText("No hay sensores disponibles en este momento");
+    renderApp({
+      initialSensors: [],
+      error: null,
+    });
+
+    expect(screen.getByText("No hay sensores disponibles en este momento")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Nuevo Sensor" }));
 
@@ -170,26 +179,26 @@ describe("Sensor Creation", () => {
   });
 
   it("WHEN sensor is created THEN form is reset and closed", async () => {
-    fetch
-      .mockResolvedValueOnce({
-        json: async () => ({ data: { sensors: [] } }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          data: {
-            sensor: {
-              _id: "123",
-              alias: "New Sensor",
-              type: "int",
-            },
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: {
+          sensor: {
+            _id: "123",
+            alias: "New Sensor",
+            type: "int",
           },
-        }),
-      });
+        },
+      }),
+    });
 
     const user = userEvent.setup();
-    render(<App />);
-    await screen.findByText("No hay sensores disponibles en este momento");
+    renderApp({
+      initialSensors: [],
+      error: null,
+    });
+
+    expect(screen.getByText("No hay sensores disponibles en este momento")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Nuevo Sensor" }));
 

@@ -1,9 +1,22 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import App from "../src/App";
+import SensorsPage from "../pages/index";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 global.fetch = vi.fn();
+
+// Helper to render the full app layout
+function renderApp(pageProps) {
+  return render(
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-blue-50 flex flex-col">
+      <Header />
+      <SensorsPage {...pageProps} />
+      <Footer />
+    </div>
+  );
+}
 
 describe("SensorDataPoints Navigation", () => {
   const mockSensors = [
@@ -21,22 +34,17 @@ describe("SensorDataPoints Navigation", () => {
     },
   ];
 
-  beforeEach(() => {
-    vi.stubEnv("VITE_API_URL", "http://test.com/api");
-  });
-
   afterEach(() => {
     fetch.mockClear();
   });
 
   it("WHEN sensor card displayed THEN shows 'Ver Datos' button", async () => {
-    fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: { sensors: mockSensors } }),
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
     });
 
-    render(<App />);
-    await screen.findByText("Temperature Sensor");
+    expect(screen.getByText("Temperature Sensor")).toBeInTheDocument();
 
     const sensorCard = screen.getByRole("article", {
       name: "Sensor Temperature Sensor",
@@ -44,49 +52,20 @@ describe("SensorDataPoints Navigation", () => {
     expect(within(sensorCard).getByText("Ver Datos")).toBeInTheDocument();
   });
 
-  it("WHEN 'Ver Datos' button clicked THEN navigates to datapoints page", async () => {
-    const user = userEvent.setup();
-
-    // Mock sensors list response
-    fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: { sensors: mockSensors } }),
+  it("WHEN 'Ver Datos' button exists THEN has correct href", async () => {
+    renderApp({
+      initialSensors: mockSensors,
+      error: null,
     });
 
-    render(<App />);
-    await screen.findByText("Temperature Sensor");
+    expect(screen.getByText("Temperature Sensor")).toBeInTheDocument();
 
     const sensorCard = screen.getByRole("article", {
       name: "Sensor Temperature Sensor",
     });
-    const verDatosButton = within(sensorCard).getByText("Ver Datos");
+    const verDatosLink = within(sensorCard).getByText("Ver Datos");
 
-    // Mock datapoints response
-    fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        data: {
-          sensor: {
-            _id: "sensor123",
-            alias: "Temperature Sensor",
-            type: "float",
-          },
-          datapoints: [
-            {
-              _id: "dp1",
-              sensorId: "sensor123",
-              value: 23.5,
-              timestamp: "2024-01-15T10:00:00.000Z",
-            },
-          ],
-        },
-      }),
-    });
-
-    await user.click(verDatosButton);
-
-    // Should navigate to datapoints page
-    expect(await screen.findByText("Datos del Sensor")).toBeInTheDocument();
-    expect(screen.getByText("1 lecturas registradas")).toBeInTheDocument();
+    // In Next.js, the Link component renders an anchor tag
+    expect(verDatosLink).toHaveAttribute("href", "/sensors/sensor123/datapoints");
   });
 });
