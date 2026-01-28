@@ -1,9 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
-import mongoose from 'mongoose';
 import app from '../src/app.js';
-
-const Sensor = mongoose.model('Sensor');
+import { Sensor } from '../src/models/index.js';
 
 describe('PUT /api/sensors/:id', () => {
   let sensorId;
@@ -13,7 +11,7 @@ describe('PUT /api/sensors/:id', () => {
       alias: 'Temperature Sensor',
       type: 'float',
     });
-    sensorId = sensor._id.toString();
+    sensorId = sensor.id.toString();
   });
 
   it('WHEN updating existing sensor with valid data THEN returns 200 and updated sensor', async () => {
@@ -30,9 +28,9 @@ describe('PUT /api/sensors/:id', () => {
     expect(response.body.data.sensor).toBeDefined();
     expect(response.body.data.sensor.alias).toBe('Updated Temperature Sensor');
     expect(response.body.data.sensor.type).toBe('int');
-    expect(response.body.data.sensor._id).toBe(sensorId);
+    expect(response.body.data.sensor._id.toString()).toBe(sensorId);
 
-    const updatedSensor = await Sensor.findById(sensorId);
+    const updatedSensor = await Sensor.findByPk(sensorId);
     expect(updatedSensor.alias).toBe('Updated Temperature Sensor');
     expect(updatedSensor.type).toBe('int');
   });
@@ -79,7 +77,7 @@ describe('PUT /api/sensors/:id', () => {
   });
 
   it('WHEN updating non-existent sensor THEN returns 404', async () => {
-    const nonExistentId = new mongoose.Types.ObjectId();
+    const nonExistentId = 99999;
     const updateData = {
       alias: 'New Alias',
     };
@@ -115,7 +113,7 @@ describe('PUT /api/sensors/:id', () => {
   });
 
   it('WHEN sensor is updated THEN updatedAt timestamp changes', async () => {
-    const originalSensor = await Sensor.findById(sensorId);
+    const originalSensor = await Sensor.findByPk(sensorId);
     const originalUpdatedAt = originalSensor.updatedAt;
 
     // Wait a bit to ensure timestamp difference
@@ -130,7 +128,7 @@ describe('PUT /api/sensors/:id', () => {
       .send(updateData)
       .expect(200);
 
-    const updatedSensor = await Sensor.findById(sensorId);
+    const updatedSensor = await Sensor.findByPk(sensorId);
     expect(updatedSensor.updatedAt.getTime()).toBeGreaterThan(originalUpdatedAt.getTime());
   });
 });

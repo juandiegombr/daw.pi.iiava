@@ -1,17 +1,19 @@
 services:
-  mongo:
-    image: mongo:latest
-    container_name: mongo
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
     restart: always
     ports:
-      - "27017:27017"
+      - "3306:3306"
     env_file:
       - .env
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
-      - mongo-data:/data/db
+      - mysql-data:/var/lib/mysql
 
   backend:
     build: ./backend
@@ -23,9 +25,13 @@ services:
       - .env
     environment:
       - PORT=3000
-      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017/${MONGO_DATABASE_NAME}?authSource=admin
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     depends_on:
-      - mongo
+      - mysql
 
   frontend:
     build:
@@ -42,4 +48,4 @@ services:
       - backend
 
 volumes:
-  mongo-data:
+  mysql-data:

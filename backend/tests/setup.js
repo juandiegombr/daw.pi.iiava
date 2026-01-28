@@ -1,23 +1,15 @@
-import { MongoMemoryServer } from 'mongodb-memory-server';
-import mongoose from 'mongoose';
 import { beforeAll, afterAll, afterEach } from 'vitest';
-
-let mongoServer;
+import { sequelize, Sensor, DataPoint } from '../src/models/index.js';
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
-  const mongoUri = mongoServer.getUri();
-  await mongoose.connect(mongoUri);
+  await sequelize.sync({ force: true });
 });
 
 afterEach(async () => {
-  const collections = mongoose.connection.collections;
-  for (const key in collections) {
-    await collections[key].deleteMany();
-  }
+  await DataPoint.destroy({ where: {}, truncate: true });
+  await Sensor.destroy({ where: {}, truncate: true });
 });
 
 afterAll(async () => {
-  await mongoose.disconnect();
-  await mongoServer.stop();
+  await sequelize.close();
 });

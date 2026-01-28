@@ -1,25 +1,13 @@
 import express from "express";
-import mongoose from "mongoose";
-import DataPoint from "../models/DataPoint.js";
+import { Sensor, DataPoint } from "../models/index.js";
 
 const router = express.Router();
-const SensorSchema = new mongoose.Schema(
-  {
-    alias: { type: String, required: true },
-    type: {
-      type: String,
-      enum: ["int", "float", "boolean", "string"],
-      required: true,
-    },
-  },
-  { collection: "sensor", timestamps: true }
-);
 
-const Sensor = mongoose.model("Sensor", SensorSchema);
+const VALID_TYPES = ["int", "float", "boolean", "string"];
 
 router.get("/", async (req, res) => {
   try {
-    const sensors = await Sensor.find();
+    const sensors = await Sensor.findAll();
     res.json({ data: { sensors } });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -28,8 +16,7 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const sensor = new Sensor(req.body);
-    await sensor.save();
+    const sensor = await Sensor.create(req.body);
     res.status(201).json({ data: { sensor } });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -41,7 +28,8 @@ router.put("/:id", async (req, res) => {
     const { id } = req.params;
     const { alias, type } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    const parsedId = parseInt(id, 10);
+    if (isNaN(parsedId)) {
       return res.status(400).json({ error: "Invalid sensor ID" });
     }
 
@@ -49,19 +37,20 @@ router.put("/:id", async (req, res) => {
       return res.status(400).json({ error: "At least one field (alias or type) must be provided" });
     }
 
-    const updateData = {};
-    if (alias !== undefined) updateData.alias = alias;
-    if (type !== undefined) updateData.type = type;
+    if (type !== undefined && !VALID_TYPES.includes(type)) {
+      return res.status(400).json({ error: "Invalid sensor type" });
+    }
 
-    const sensor = await Sensor.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    const sensor = await Sensor.findByPk(parsedId);
 
     if (!sensor) {
       return res.status(404).json({ error: "Sensor not found" });
     }
+
+    if (alias !== undefined) sensor.alias = alias;
+    if (type !== undefined) sensor.type = type;
+
+    await sensor.save();
 
     res.json({ data: { sensor } });
   } catch (error) {
@@ -73,20 +62,20 @@ router.get("/:id/datapoints", async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    const parsedId = parseInt(id, 10);
+    if (isNaN(parsedId)) {
       return res.status(400).json({ error: "Invalid sensor ID" });
     }
 
-    // Verify sensor exists
-    const sensor = await Sensor.findById(id);
+    const sensor = await Sensor.findByPk(parsedId);
     if (!sensor) {
       return res.status(404).json({ error: "Sensor not found" });
     }
 
-    // Get datapoints for this sensor, sorted by timestamp descending (newest first)
-    const datapoints = await DataPoint.find({ sensorId: id })
-      .sort({ timestamp: -1 })
-      .lean();
+    const datapoints = await DataPoint.findAll({
+      where: { sensorId: parsedId },
+      order: [["timestamp", "DESC"]],
+    });
 
     res.json({
       data: {
@@ -103,15 +92,18 @@ router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    const parsedId = parseInt(id, 10);
+    if (isNaN(parsedId)) {
       return res.status(400).json({ error: "Invalid sensor ID" });
     }
 
-    const sensor = await Sensor.findByIdAndDelete(id);
+    const sensor = await Sensor.findByPk(parsedId);
 
     if (!sensor) {
       return res.status(404).json({ error: "Sensor not found" });
     }
+
+    await sensor.destroy();
 
     res.json({ success: true });
   } catch (error) {

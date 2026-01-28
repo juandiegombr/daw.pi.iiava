@@ -1,12 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
-import mongoose from 'mongoose';
 import app from '../src/app.js';
-
-const Sensor = mongoose.model('Sensor');
-
-// We'll define the DataPoint model in the implementation
-let DataPoint;
+import { Sensor, DataPoint } from '../src/models/index.js';
 
 describe('GET /api/sensors/:id/datapoints', () => {
   let sensorId;
@@ -16,28 +11,15 @@ describe('GET /api/sensors/:id/datapoints', () => {
       alias: 'Temperature Sensor',
       type: 'float',
     });
-    sensorId = sensor._id.toString();
-
-    // Get or create DataPoint model
-    try {
-      DataPoint = mongoose.model('DataPoint');
-    } catch (error) {
-      // Model doesn't exist yet, will be created in implementation
-      const DataPointSchema = new mongoose.Schema({
-        sensorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Sensor', required: true },
-        value: { type: mongoose.Schema.Types.Mixed, required: true },
-        timestamp: { type: Date, default: Date.now },
-      });
-      DataPoint = mongoose.model('DataPoint', DataPointSchema);
-    }
+    sensorId = sensor.id.toString();
   });
 
   it('WHEN getting datapoints for sensor with data THEN returns 200 and datapoints array', async () => {
     // Create some datapoints for the sensor
-    await DataPoint.create([
-      { sensorId, value: 23.5, timestamp: new Date('2024-01-01T10:00:00Z') },
-      { sensorId, value: 24.1, timestamp: new Date('2024-01-01T10:05:00Z') },
-      { sensorId, value: 23.8, timestamp: new Date('2024-01-01T10:10:00Z') },
+    await DataPoint.bulkCreate([
+      { sensorId, valueFloat: 23.5, timestamp: new Date('2024-01-01T10:00:00Z') },
+      { sensorId, valueFloat: 24.1, timestamp: new Date('2024-01-01T10:05:00Z') },
+      { sensorId, valueFloat: 23.8, timestamp: new Date('2024-01-01T10:10:00Z') },
     ]);
 
     const response = await request(app)
@@ -75,7 +57,7 @@ describe('GET /api/sensors/:id/datapoints', () => {
   });
 
   it('WHEN getting datapoints for non-existent sensor THEN returns 404', async () => {
-    const nonExistentId = new mongoose.Types.ObjectId();
+    const nonExistentId = 99999;
     const response = await request(app)
       .get(`/api/sensors/${nonExistentId}/datapoints`)
       .expect(404);
@@ -85,10 +67,10 @@ describe('GET /api/sensors/:id/datapoints', () => {
 
   it('WHEN getting datapoints THEN returns sorted by timestamp descending', async () => {
     // Create datapoints with different timestamps
-    await DataPoint.create([
-      { sensorId, value: 20.0, timestamp: new Date('2024-01-01T10:00:00Z') },
-      { sensorId, value: 25.0, timestamp: new Date('2024-01-01T12:00:00Z') },
-      { sensorId, value: 22.5, timestamp: new Date('2024-01-01T11:00:00Z') },
+    await DataPoint.bulkCreate([
+      { sensorId, valueFloat: 20.0, timestamp: new Date('2024-01-01T10:00:00Z') },
+      { sensorId, valueFloat: 25.0, timestamp: new Date('2024-01-01T12:00:00Z') },
+      { sensorId, valueFloat: 22.5, timestamp: new Date('2024-01-01T11:00:00Z') },
     ]);
 
     const response = await request(app)
@@ -115,11 +97,11 @@ describe('GET /api/sensors/:id/datapoints', () => {
     });
 
     // Create datapoints for both sensors
-    await DataPoint.create([
-      { sensorId, value: 23.5 },
-      { sensorId, value: 24.1 },
-      { sensorId: sensor2._id, value: 100 },
-      { sensorId: sensor2._id, value: 105 },
+    await DataPoint.bulkCreate([
+      { sensorId, valueFloat: 23.5 },
+      { sensorId, valueFloat: 24.1 },
+      { sensorId: sensor2.id, valueInt: 100 },
+      { sensorId: sensor2.id, valueInt: 105 },
     ]);
 
     const response = await request(app)
@@ -130,21 +112,22 @@ describe('GET /api/sensors/:id/datapoints', () => {
 
     // All datapoints should belong to the requested sensor
     response.body.data.datapoints.forEach(dp => {
-      expect(dp.sensorId).toBe(sensorId);
+      expect(dp.sensorId.toString()).toBe(sensorId);
     });
   });
 
   it('WHEN getting datapoints THEN includes sensor metadata', async () => {
-    await DataPoint.create([
-      { sensorId, value: 23.5 },
-    ]);
+    await DataPoint.create({
+      sensorId,
+      valueFloat: 23.5,
+    });
 
     const response = await request(app)
       .get(`/api/sensors/${sensorId}/datapoints`)
       .expect(200);
 
     expect(response.body.data.sensor).toBeDefined();
-    expect(response.body.data.sensor._id).toBe(sensorId);
+    expect(response.body.data.sensor._id.toString()).toBe(sensorId);
     expect(response.body.data.sensor.alias).toBe('Temperature Sensor');
     expect(response.body.data.sensor.type).toBe('float');
   });

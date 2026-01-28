@@ -1,9 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
-import mongoose from 'mongoose';
 import app from '../src/app.js';
-
-const Sensor = mongoose.model('Sensor');
+import { Sensor } from '../src/models/index.js';
 
 describe('DELETE /api/sensors/:id', () => {
   let sensorId;
@@ -13,7 +11,7 @@ describe('DELETE /api/sensors/:id', () => {
       alias: 'Temperature Sensor',
       type: 'float',
     });
-    sensorId = sensor._id.toString();
+    sensorId = sensor.id.toString();
   });
 
   it('WHEN deleting existing sensor THEN returns 200 and removes sensor', async () => {
@@ -23,12 +21,12 @@ describe('DELETE /api/sensors/:id', () => {
 
     expect(response.body.success).toBe(true);
 
-    const deletedSensor = await Sensor.findById(sensorId);
+    const deletedSensor = await Sensor.findByPk(sensorId);
     expect(deletedSensor).toBeNull();
   });
 
   it('WHEN deleting non-existent sensor THEN returns 404', async () => {
-    const nonExistentId = new mongoose.Types.ObjectId();
+    const nonExistentId = 99999;
     const response = await request(app)
       .delete(`/api/sensors/${nonExistentId}`)
       .expect(404);
@@ -54,7 +52,7 @@ describe('DELETE /api/sensors/:id', () => {
       .delete(`/api/sensors/${sensorId}`)
       .expect(200);
 
-    const remainingSensor = await Sensor.findById(sensor2._id);
+    const remainingSensor = await Sensor.findByPk(sensor2.id);
     expect(remainingSensor).not.toBeNull();
     expect(remainingSensor.alias).toBe('Pressure Sensor');
   });

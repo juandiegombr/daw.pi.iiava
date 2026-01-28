@@ -1,15 +1,14 @@
-import mongoose from "mongoose";
 import dotenv from "dotenv";
 import app from "./app.js";
+import { sequelize } from "./models/index.js";
 
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI;
 
-mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ Error connecting to MongoDB:", err));
+sequelize
+  .sync()
+  .then(() => console.log("MySQL connected and synced"))
+  .catch((err) => console.error("Error connecting to MySQL:", err));
 
-app.listen(PORT, () => console.log(`🚀 Backend running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));

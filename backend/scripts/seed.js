@@ -1,46 +1,7 @@
-import mongoose from "mongoose";
 import dotenv from "dotenv";
+import { sequelize, Sensor, DataPoint } from "../src/models/index.js";
 
 dotenv.config();
-
-const SensorSchema = new mongoose.Schema(
-  {
-    alias: { type: String, required: true },
-    type: {
-      type: String,
-      enum: ["int", "float", "boolean", "string"],
-      required: true,
-    },
-  },
-  { collection: "sensor", timestamps: true }
-);
-
-const Sensor = mongoose.model("Sensor", SensorSchema);
-
-const DataPointSchema = new mongoose.Schema(
-  {
-    sensorId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Sensor",
-      required: true,
-      index: true,
-    },
-    value: {
-      type: mongoose.Schema.Types.Mixed,
-      required: true,
-    },
-    timestamp: {
-      type: Date,
-      default: Date.now,
-      index: true,
-    },
-  },
-  { collection: "datapoint" }
-);
-
-DataPointSchema.index({ sensorId: 1, timestamp: -1 });
-
-const DataPoint = mongoose.model("DataPoint", DataPointSchema);
 
 const sampleSensors = [
   {
@@ -92,7 +53,7 @@ function generateDataPoints(sensors) {
   const hoursToGenerate = 24; // Generate data for the last 24 hours
   const pointsPerHour = 12; // One reading every 5 minutes
 
-  sensors.forEach((sensor, sensorIndex) => {
+  sensors.forEach((sensor) => {
     for (let hour = 0; hour < hoursToGenerate; hour++) {
       for (let point = 0; point < pointsPerHour; point++) {
         const minutesAgo = hour * 60 + point * 5;
@@ -102,7 +63,7 @@ function generateDataPoints(sensors) {
         // Generate realistic values based on sensor type and alias
         switch (sensor.alias) {
           case "Motor 1 Temperature Sensor":
-            // Temperature: 75-85°C with some variation
+            // Temperature: 75-85 C with some variation
             value = 75 + Math.random() * 10 + Math.sin(hour / 6) * 3;
             value = parseFloat(value.toFixed(2));
             break;
@@ -153,7 +114,7 @@ function generateDataPoints(sensors) {
             break;
 
           case "Ambient Temperature":
-            // Temperature: 20-25°C
+            // Temperature: 20-25 C
             value = 20 + Math.random() * 5 + Math.sin(hour / 12 * Math.PI) * 2;
             value = parseFloat(value.toFixed(2));
             break;
@@ -162,9 +123,12 @@ function generateDataPoints(sensors) {
             value = 0;
         }
 
+        // Use type-specific value columns
+        const valueFields = DataPoint.setValueByType(sensor.type, value);
+
         datapoints.push({
-          sensorId: sensor._id,
-          value,
+          sensorId: sensor.id,
+          ...valueFields,
           timestamp,
         });
       }
@@ -175,49 +139,42 @@ function generateDataPoints(sensors) {
 }
 
 async function seed() {
-  const MONGO_URI = process.env.MONGO_URI;
-
-  if (!MONGO_URI) {
-    console.error("❌ Error: MONGO_URI is not defined in environment variables");
-    process.exit(1);
-  }
-
   try {
-    console.log("🔌 Connecting to MongoDB...");
-    await mongoose.connect(MONGO_URI);
-    console.log("✅ Connected to MongoDB");
+    console.log("Connecting to MySQL...");
+    await sequelize.sync();
+    console.log("Connected to MySQL");
 
-    // Clear existing data (optional - comment out if you want to keep existing data)
-    console.log("🧹 Clearing existing sensors and datapoints...");
-    await Sensor.deleteMany({});
-    await DataPoint.deleteMany({});
-    console.log("✅ Existing data deleted");
+    // Clear existing data (delete datapoints first due to foreign key)
+    console.log("Clearing existing sensors and datapoints...");
+    await DataPoint.destroy({ where: {} });
+    await Sensor.destroy({ where: {} });
+    console.log("Existing data deleted");
 
     // Insert sample sensors
-    console.log("🌱 Inserting sample sensors...");
-    const sensors = await Sensor.insertMany(sampleSensors);
-    console.log(`✅ ${sensors.length} sensors inserted successfully`);
+    console.log("Inserting sample sensors...");
+    const sensors = await Sensor.bulkCreate(sampleSensors);
+    console.log(`${sensors.length} sensors inserted successfully`);
 
     // Display inserted sensors
-    console.log("\n📊 Inserted sensors:");
+    console.log("\nInserted sensors:");
     sensors.forEach((sensor, index) => {
       console.log(`  ${index + 1}. ${sensor.alias} (${sensor.type})`);
     });
 
     // Generate and insert datapoints
-    console.log("\n🌱 Generating and inserting datapoints...");
+    console.log("\nGenerating and inserting datapoints...");
     const datapoints = generateDataPoints(sensors);
-    await DataPoint.insertMany(datapoints);
-    console.log(`✅ ${datapoints.length} datapoints inserted successfully`);
-    console.log(`   📈 ${datapoints.length / sensors.length} datapoints per sensor (24 hours, 5-min intervals)`);
+    await DataPoint.bulkCreate(datapoints);
+    console.log(`${datapoints.length} datapoints inserted successfully`);
+    console.log(`   ${datapoints.length / sensors.length} datapoints per sensor (24 hours, 5-min intervals)`);
 
-    console.log("\n🎉 Seed completed successfully!");
+    console.log("\nSeed completed successfully!");
   } catch (error) {
-    console.error("❌ Error during seed:", error.message);
+    console.error("Error during seed:", error.message);
     process.exit(1);
   } finally {
-    await mongoose.connection.close();
-    console.log("🔌 Connection closed");
+    await sequelize.close();
+    console.log("Connection closed");
     process.exit(0);
   }
 }
