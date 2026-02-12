@@ -6,7 +6,7 @@ Una aplicación web full-stack moderna construida con React y Node.js, desarroll
 
 ## Descripción General
 
-Esta aplicación se compone de la parte frontend y la parte de backend. El backend proporciona una API REST robusta construida con Express.js y MongoDB, mientras que el frontend ofrece una interfaz de usuario responsiva usando React y Vite para un rendimiento óptimo. Todo el stack está containerizado usando Docker, permitiendo entornos de desarrollo y despliegue consistentes.
+Esta aplicación se compone de la parte frontend y la parte de backend. El backend proporciona una API REST robusta construida con Express.js y MySQL, mientras que el frontend ofrece una interfaz de usuario responsiva usando React y Next.js para un rendimiento óptimo. Todo el stack está containerizado usando Docker, permitiendo entornos de desarrollo y despliegue consistentes.
 
 ## Sobre el Proyecto
 
@@ -19,13 +19,14 @@ Para entender la visión completa del proyecto, casos de uso y arquitectura del 
 ### Backend
 
 - **Node.js** con **Express.js** - Servidor API REST
-- **MongoDB** con **Mongoose** - Base de datos y ODM
+- **MySQL 8.0** con **Sequelize** - Base de datos y ORM
 - **CORS** - Cross-Origin Resource Sharing
 - **dotenv** - Gestión de variables de entorno
 
 ### Frontend
 
 - **React** - Biblioteca de UI
+- **Next.js** - Framework React para producción
 - **Vite** - Herramienta de compilación y servidor de desarrollo
 
 ### DevOps
@@ -83,11 +84,13 @@ Copia el archivo de ejemplo de entorno y configúralo:
 cp .env.example .env
 ```
 
-Edita el archivo `.env` con tus credenciales de MongoDB:
+Edita el archivo `.env` con tus credenciales de MySQL (opcional - los valores de ejemplo funcionan para desarrollo):
 
 ```env
-MONGO_USER=tu-usuario-mongo
-MONGO_PASSWORD=tu-contraseña-mongo
+MYSQL_USER=example-user
+MYSQL_PASSWORD=example-password
+MYSQL_ROOT_PASSWORD=example-password
+MYSQL_DATABASE=example-database
 ```
 
 ### 3. Elige tu Método de Configuración
@@ -129,11 +132,11 @@ npm run dev       # Iniciar con nodemon (auto-recarga)
 ```bash
 cd frontend
 npm install
-npm run dev       # Iniciar servidor de desarrollo Vite
+npm run dev       # Iniciar servidor de desarrollo Next.js
 ```
 
-**MongoDB**:
-Necesitarás ejecutar MongoDB localmente o usar un servicio en la nube como MongoDB Atlas.
+**MySQL**:
+Necesitarás ejecutar MySQL 8.0 localmente. Asegúrate de que esté escuchando en `localhost:3306` con las credenciales definidas en tu archivo `.env`.
 
 ## Comandos Disponibles
 
@@ -158,37 +161,53 @@ Esto mostrará una lista formateada de todos los objetivos disponibles incluyend
 
 **Frontend** (`frontend/package.json`):
 
-- `npm run dev` - Iniciar servidor de desarrollo Vite
+- `npm run dev` - Iniciar servidor de desarrollo Next.js
 - `npm run build` - Compilar para producción
-- `npm run preview` - Vista previa de compilación de producción
+- `npm start` - Ejecutar servidor de producción
 
 ## Acceder a la Aplicación
 
 Una vez en ejecución, puedes acceder a:
 
-- **Frontend**: http://localhost:5173 (servidor de desarrollo Vite)
+- **Frontend**: http://localhost:3001 (servidor de desarrollo Next.js)
 - **API Backend**: http://localhost:3000
-- **MongoDB**: localhost:27017
+- **MySQL**: localhost:3306
 
 Probar la API backend:
 
 ```bash
-curl http://localhost:3000/
+curl http://localhost:3000/api/sensors
 ```
 
-Respuesta esperada:
+Respuesta esperada (ejemplo):
 
 ```json
 {
-  "data": {
-    "message": "Hello world!"
-  }
+  "sensors": [
+    {
+      "id": 1,
+      "name": "Sensor 1",
+      "location": "Location",
+      "type": "temperature"
+    }
+  ]
 }
 ```
 
 ## Solución de Problemas
 
 ### Problemas con Docker
+
+**¿Backend no puede conectarse a la base de datos?**
+
+El backend utiliza health checks para esperar a que MySQL esté completamente inicializado antes de intentar conectarse. Si encuentras errores de conexión:
+
+```bash
+make dev-down
+make dev-rebuild
+```
+
+Esto fuerza la reconstrucción de los contenedores y asegura que los health checks funcionen correctamente.
 
 **¿Contenedores no inician?**
 

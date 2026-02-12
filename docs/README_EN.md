@@ -6,7 +6,7 @@ A modern full-stack web application built with React and Node.js, developed as p
 
 ## Overview
 
-This application is composed of a frontend and a backend part. The backend provides a robust REST API built with Express.js and MongoDB, while the frontend delivers a responsive user interface using React and Vite for optimal performance. The entire stack is containerized using Docker, enabling consistent development and deployment environments.
+This application is composed of a frontend and a backend part. The backend provides a robust REST API built with Express.js and MySQL, while the frontend delivers a responsive user interface using React and Next.js for optimal performance. The entire stack is containerized using Docker, enabling consistent development and deployment environments.
 
 ## About the Project
 
@@ -19,13 +19,14 @@ To understand the full project vision, use cases, and system architecture:
 ### Backend
 
 - **Node.js** with **Express.js** - REST API server
-- **MongoDB** with **Mongoose** - Database and ODM
+- **MySQL 8.0** with **Sequelize** - Database and ORM
 - **CORS** - Cross-Origin Resource Sharing
 - **dotenv** - Environment variable management
 
 ### Frontend
 
 - **React** - UI library
+- **Next.js** - React framework for production
 - **Vite** - Build tool and dev server
 
 ### DevOps
@@ -83,11 +84,13 @@ Copy the example environment file and configure it:
 cp .env.example .env
 ```
 
-Edit the `.env` file with your MongoDB credentials:
+Edit the `.env` file with your MySQL credentials (optional - example values work for development):
 
 ```env
-MONGO_USER=your-mongo-user
-MONGO_PASSWORD=your-mongo-password
+MYSQL_USER=example-user
+MYSQL_PASSWORD=example-password
+MYSQL_ROOT_PASSWORD=example-password
+MYSQL_DATABASE=example-database
 ```
 
 ### 3. Choose Your Setup Method
@@ -129,11 +132,11 @@ npm run dev       # Start with nodemon (auto-reload)
 ```bash
 cd frontend
 npm install
-npm run dev       # Start Vite dev server
+npm run dev       # Start Next.js dev server
 ```
 
-**MongoDB**:
-You'll need to run MongoDB locally or use a cloud service like MongoDB Atlas.
+**MySQL**:
+You'll need to run MySQL 8.0 locally. Make sure it's listening on `localhost:3306` with the credentials defined in your `.env` file.
 
 ## Available Commands
 
@@ -158,37 +161,53 @@ This will display a formatted list of all available targets including commands f
 
 **Frontend** (`frontend/package.json`):
 
-- `npm run dev` - Start Vite dev server
+- `npm run dev` - Start Next.js dev server
 - `npm run build` - Build for production
-- `npm run preview` - Preview production build
+- `npm start` - Start production server
 
 ## Accessing the Application
 
 Once running, you can access:
 
-- **Frontend**: http://localhost:5173 (Vite dev server)
+- **Frontend**: http://localhost:3001 (Next.js dev server)
 - **Backend API**: http://localhost:3000
-- **MongoDB**: localhost:27017
+- **MySQL**: localhost:3306
 
 Test the backend API:
 
 ```bash
-curl http://localhost:3000/
+curl http://localhost:3000/api/sensors
 ```
 
-Expected response:
+Expected response (example):
 
 ```json
 {
-  "data": {
-    "message": "Hello world!"
-  }
+  "sensors": [
+    {
+      "id": 1,
+      "name": "Sensor 1",
+      "location": "Location",
+      "type": "temperature"
+    }
+  ]
 }
 ```
 
 ## Troubleshooting
 
 ### Docker Issues
+
+**Backend cannot connect to database?**
+
+The backend uses health checks to wait for MySQL to be fully initialized before attempting to connect. If you encounter connection errors:
+
+```bash
+make dev-down
+make dev-rebuild
+```
+
+This forces a rebuild of the containers and ensures health checks work correctly.
 
 **Containers not starting?**
 
