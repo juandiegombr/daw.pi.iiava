@@ -1,7 +1,11 @@
 import dotenv from "dotenv";
-import { sequelize, Sensor, DataPoint } from "../src/models/index.js";
+import { fileURLToPath } from "url";
+import { dirname, resolve } from "path";
 
-dotenv.config();
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: resolve(__dirname, "../../.env") });
+
+import { sequelize, Sensor, DataPoint } from "../src/models/index.js";
 
 const sampleSensors = [
   {
