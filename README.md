@@ -272,45 +272,6 @@ Si obtienes un error "port already in use", puedes:
 
 ---
 
-## Troubleshooting - Producción
-
-### Frontend no se conecta al Backend
-
-**Síntomas:**
-- Errores 503/504 en Vercel
-- API calls devuelven 404
-
-**Soluciones:**
-1. Verificar `API_URL` en Vercel → Settings → Environment Variables
-2. Comprobar que el backend está corriendo: `https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net/api/sensors`
-3. Revisar logs de Azure: App Service → Log stream
-
-### Backend no inicia en Azure
-
-**Síntomas:**
-- Status: Stopped o Failed
-- SSH: Connection closed
-
-**Soluciones:**
-1. Verificar variables de entorno MySQL están configuradas
-2. Verificar conexión a Azure MySQL:
-   ```bash
-   mysql -h projecte-db.mysql.database.azure.com -u juandiegombr -p
-   ```
-3. Revisar logs: App Service → Log stream
-4. Reiniciar App Service: Restart button en Azure Portal
-
-### Base de Datos no accesible
-
-**Síntomas:**
-- Backend no puede conectar a MySQL
-- Error: "connect ETIMEDOUT"
-
-**Soluciones:**
-1. Verificar firewall de Azure MySQL permite App Service
-2. Verificar credenciales MySQL en variables de entorno
-3. Comprobar que el servidor MySQL está "Available" en Azure Portal
-
 ## Flujo de Trabajo de Desarrollo
 
 1. Iniciar el entorno de desarrollo: `make dev-up`
