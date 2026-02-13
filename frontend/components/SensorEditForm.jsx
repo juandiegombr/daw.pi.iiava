@@ -14,7 +14,8 @@ export default function SensorEditForm({ sensor, onSensorUpdated, onClose }) {
     setError(null);
 
     try {
-      const response = await fetch(`/api/sensors/${sensor._id}`, {
+      const apiUrl = process.env.API_URL || "http://localhost:3000";
+      const response = await fetch(apiUrl + `/api/sensors/${sensor._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
