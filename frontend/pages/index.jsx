@@ -64,8 +64,7 @@ export default function SensorsPage({ initialSensors, error: initialError }) {
     setShowDeleteConfirm(false);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      const response = await fetch(apiUrl + `/api/sensors/${sensorToDelete._id}`, {
+      const response = await fetch(`/api/sensors/${sensorToDelete._id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });
