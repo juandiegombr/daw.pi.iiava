@@ -34,10 +34,10 @@ Para entender la visión completa del proyecto, casos de uso y arquitectura del 
 - **Docker** & **Docker Compose** - Containerización
 - **Makefile** - Automatización de comandos
 - **GitHub Actions** - Pipelines CI/CD
-- **AWS** - Infraestructura de despliegue en la nube
-  - **S3** - Alojamiento estático del frontend
-  - **EC2** - Servidor API backend
-  - **CloudFront** - CDN y origen unificado
+- **Azure** - Infraestructura de despliegue en la nube
+  - **App Service** - Servidor API backend
+  - **Azure Database for MySQL** - Base de datos administrada
+- **Vercel** - Alojamiento frontend con CDN global
 
 ## Despliegue en la Nube
 
@@ -53,7 +53,7 @@ Para entender la visión completa del proyecto, casos de uso y arquitectura del 
 ┌──────────────────────────────────────────────────────────────┐
 │           Azure App Service (Web App)                        │
 │          (Backend - Node.js Express API)                     │
-│          pi-backend.azurewebsites.net                        │
+│   pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azure...      │
 └──────────────────────────┬──────────────────────────────────┘
                            │
                            ↓ (Database connection)
@@ -67,18 +67,18 @@ Para entender la visión completa del proyecto, casos de uso y arquitectura del 
 
 | Componente | Plataforma | URL | Estado |
 |-----------|-----------|-----|--------|
-| **Frontend** | Vercel | `https://daw-pi-iava.vercel.app` | ✅ Producción |
-| **Backend** | Azure App Service | `https://pi-backend.azurewebsites.net` | ✅ Producción |
+| **Frontend** | Vercel | [https://daw-pi-iava.vercel.app](https://daw-pi-iava.vercel.app) | ✅ Producción |
+| **Backend** | Azure App Service | [https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net](https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net) | ✅ Producción |
 | **Base de Datos** | Azure MySQL | `projecte-db.mysql.database.azure.com` | ✅ Producción |
 
 ---
 
 ### Documentación de Despliegue
 
-Para información más detallada sobre la arquitectura de despliegue en AWS (previamente usado):
+Para información más detallada sobre la arquitectura de despliegue en Azure:
 
-- **[Documentación de Despliegue AWS (Español)](docs/AWS_DEPLOYMENT_ES.md)**
-- **[AWS Deployment Documentation (English)](docs/AWS_DEPLOYMENT_EN.md)**
+- **[Documentación de Despliegue Azure (Español)](docs/AZURE_DEPLOYMENT_ES.md)**
+- **[Azure Deployment Documentation (English)](docs/AZURE_DEPLOYMENT_EN.md)**
 
 ## Requisitos Previos
 
@@ -282,7 +282,7 @@ Si obtienes un error "port already in use", puedes:
 
 **Soluciones:**
 1. Verificar `API_URL` en Vercel → Settings → Environment Variables
-2. Comprobar que el backend está corriendo: `https://pi-backend.azurewebsites.net/api/sensors`
+2. Comprobar que el backend está corriendo: `https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net/api/sensors`
 3. Revisar logs de Azure: App Service → Log stream
 
 ### Backend no inicia en Azure
@@ -333,7 +333,7 @@ El frontend se despliega automáticamente a Vercel mediante GitHub Actions:
    - Configurar raíz de proyecto: `frontend`
 
 2. **Variables de Entorno:**
-   - `API_URL` → URL del backend (ej: `https://pi-backend.azurewebsites.net`)
+   - `API_URL` → URL del backend (ej: `https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net`)
 
 3. **Despliegue:**
    - Empuja a `main` → Vercel construye y despliega automáticamente
@@ -361,7 +361,7 @@ El backend se despliega automáticamente a Azure mediante GitHub Actions:
 
 3. **Despliegue:**
    - Empuja a `main` → GitHub Actions construye y despliega
-   - URL: `https://pi-backend.azurewebsites.net`
+   - URL: `https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net`
 
 ### Base de Datos (Azure MySQL)
 
