@@ -39,9 +39,43 @@ Para entender la visión completa del proyecto, casos de uso y arquitectura del 
   - **EC2** - Servidor API backend
   - **CloudFront** - CDN y origen unificado
 
-## Despliegue en AWS
+## Despliegue en la Nube
 
-Para información detallada sobre la arquitectura de despliegue en AWS, incluyendo instrucciones de configuración:
+### Arquitectura Actual (Production)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        Vercel CDN                           │
+│                    (Frontend - Next.js)                     │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           ↓ (API calls to)
+┌──────────────────────────────────────────────────────────────┐
+│           Azure App Service (Web App)                        │
+│          (Backend - Node.js Express API)                     │
+│          pi-backend.azurewebsites.net                        │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           ↓ (Database connection)
+┌──────────────────────────────────────────────────────────────┐
+│        Azure Database for MySQL (Managed Instance)           │
+│               (Production Database)                          │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Componentes Desplegados
+
+| Componente | Plataforma | URL | Estado |
+|-----------|-----------|-----|--------|
+| **Frontend** | Vercel | `https://daw-pi-iava.vercel.app` | ✅ Producción |
+| **Backend** | Azure App Service | `https://pi-backend.azurewebsites.net` | ✅ Producción |
+| **Base de Datos** | Azure MySQL | `projecte-db.mysql.database.azure.com` | ✅ Producción |
+
+---
+
+### Documentación de Despliegue
+
+Para información más detallada sobre la arquitectura de despliegue en AWS (previamente usado):
 
 - **[Documentación de Despliegue AWS (Español)](docs/AWS_DEPLOYMENT_ES.md)**
 - **[AWS Deployment Documentation (English)](docs/AWS_DEPLOYMENT_EN.md)**
@@ -236,6 +270,47 @@ Si obtienes un error "port already in use", puedes:
 - Cambiar el puerto en el archivo Docker Compose
 - Cambiar el PORT en tu archivo `.env`
 
+---
+
+## Troubleshooting - Producción
+
+### Frontend no se conecta al Backend
+
+**Síntomas:**
+- Errores 503/504 en Vercel
+- API calls devuelven 404
+
+**Soluciones:**
+1. Verificar `API_URL` en Vercel → Settings → Environment Variables
+2. Comprobar que el backend está corriendo: `https://pi-backend.azurewebsites.net/api/sensors`
+3. Revisar logs de Azure: App Service → Log stream
+
+### Backend no inicia en Azure
+
+**Síntomas:**
+- Status: Stopped o Failed
+- SSH: Connection closed
+
+**Soluciones:**
+1. Verificar variables de entorno MySQL están configuradas
+2. Verificar conexión a Azure MySQL:
+   ```bash
+   mysql -h projecte-db.mysql.database.azure.com -u juandiegombr -p
+   ```
+3. Revisar logs: App Service → Log stream
+4. Reiniciar App Service: Restart button en Azure Portal
+
+### Base de Datos no accesible
+
+**Síntomas:**
+- Backend no puede conectar a MySQL
+- Error: "connect ETIMEDOUT"
+
+**Soluciones:**
+1. Verificar firewall de Azure MySQL permite App Service
+2. Verificar credenciales MySQL en variables de entorno
+3. Comprobar que el servidor MySQL está "Available" en Azure Portal
+
 ## Flujo de Trabajo de Desarrollo
 
 1. Iniciar el entorno de desarrollo: `make dev-up`
@@ -243,6 +318,73 @@ Si obtienes un error "port already in use", puedes:
 3. Probar tus cambios
 4. Ver logs si es necesario: `make logs-dev-backend`
 5. Detener cuando termines: `make dev-down`
+
+---
+
+## Despliegue a Producción
+
+### Frontend (Vercel)
+
+El frontend se despliega automáticamente a Vercel mediante GitHub Actions:
+
+1. **Configuración Inicial:**
+   - Conectar repositorio GitHub a Vercel
+   - Vercel detecta automáticamente Next.js
+   - Configurar raíz de proyecto: `frontend`
+
+2. **Variables de Entorno:**
+   - `API_URL` → URL del backend (ej: `https://pi-backend.azurewebsites.net`)
+
+3. **Despliegue:**
+   - Empuja a `main` → Vercel construye y despliega automáticamente
+   - URL: `https://daw-pi-iava.vercel.app`
+
+### Backend (Azure App Service)
+
+El backend se despliega automáticamente a Azure mediante GitHub Actions:
+
+1. **Configuración Inicial:**
+   ```bash
+   # Crear App Service
+   - Nombre: pi-backend
+   - Runtime: Node 22
+   - OS: Linux
+   - Plan: Básico o Superior
+   ```
+
+2. **Variables de Entorno:**
+   - `MYSQL_HOST` → Servidor Azure MySQL
+   - `MYSQL_USER` → Usuario MySQL
+   - `MYSQL_PASSWORD` → Contraseña MySQL
+   - `MYSQL_DATABASE` → Nombre de base de datos
+   - `PORT` → 3000 (predeterminado)
+
+3. **Despliegue:**
+   - Empuja a `main` → GitHub Actions construye y despliega
+   - URL: `https://pi-backend.azurewebsites.net`
+
+### Base de Datos (Azure MySQL)
+
+1. **Creación:**
+   ```bash
+   - Tipo: Azure Database for MySQL - Flexible Server
+   - Nombre: projecte-db
+   - Admin: juandiegombr
+   - Región: Spain Central
+   ```
+
+2. **Inicializar Tablas:**
+   ```bash
+   # Conectar a Azure MySQL
+   mysql -h projecte-db.mysql.database.azure.com -u juandiegombr -p
+
+   # Las tablas se crean automáticamente cuando el backend inicia
+   # (Sequelize sync)
+   ```
+
+3. **Configuración de Firewall:**
+   - Permitir conexiones desde Azure App Service
+   - Permitir conexiones desde tu IP local (desarrollo)
 
 ## Licencia
 
