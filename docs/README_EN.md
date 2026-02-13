@@ -34,17 +34,51 @@ To understand the full project vision, use cases, and system architecture:
 - **Docker** & **Docker Compose** - Containerization
 - **Makefile** - Command automation
 - **GitHub Actions** - CI/CD pipelines
-- **AWS** - Cloud deployment infrastructure
-  - **S3** - Frontend static hosting
-  - **EC2** - Backend API server
-  - **CloudFront** - CDN and unified origin
+- **Azure** - Cloud deployment infrastructure
+  - **App Service** - Backend API server
+  - **Azure Database for MySQL** - Managed database
+- **Vercel** - Frontend hosting with global CDN
 
-## AWS Deployment
+## Cloud Deployment
 
-For detailed information about the AWS deployment architecture, including setup instructions and configuration:
+### Current Production Architecture
 
-- **[AWS Deployment Documentation (English)](AWS_DEPLOYMENT_EN.md)**
-- **[Documentación de Despliegue AWS (Español)](AWS_DEPLOYMENT_ES.md)**
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        Vercel CDN                           │
+│                    (Frontend - Next.js)                     │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           ↓ (API calls to)
+┌──────────────────────────────────────────────────────────────┐
+│           Azure App Service (Web App)                        │
+│          (Backend - Node.js Express API)                     │
+│   pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azure...      │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           ↓ (Database connection)
+┌──────────────────────────────────────────────────────────────┐
+│        Azure Database for MySQL (Managed Instance)           │
+│               (Production Database)                          │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Deployed Components
+
+| Component | Platform | URL | Status |
+|-----------|----------|-----|--------|
+| **Frontend** | Vercel | [https://daw-pi-iava.vercel.app](https://daw-pi-iava.vercel.app) | ✅ Production |
+| **Backend** | Azure App Service | [https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net](https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net) | ✅ Production |
+| **Database** | Azure MySQL | `projecte-db.mysql.database.azure.com` | ✅ Production |
+
+---
+
+### Deployment Documentation
+
+For more detailed information about the Azure deployment architecture:
+
+- **[Azure Deployment Documentation (English)](AZURE_DEPLOYMENT_EN.md)**
+- **[Documentación de Despliegue Azure (Español)](AZURE_DEPLOYMENT_ES.md)**
 
 ## Prerequisites
 
@@ -194,48 +228,6 @@ Expected response (example):
 }
 ```
 
-## Troubleshooting
-
-### Docker Issues
-
-**Backend cannot connect to database?**
-
-The backend uses health checks to wait for MySQL to be fully initialized before attempting to connect. If you encounter connection errors:
-
-```bash
-make dev-down
-make dev-rebuild
-```
-
-This forces a rebuild of the containers and ensures health checks work correctly.
-
-**Containers not starting?**
-
-```bash
-make dev-down
-make dev-rebuild
-```
-
-**Check logs:**
-
-```bash
-make logs-dev-backend
-```
-
-**Clean Docker resources:**
-
-```bash
-docker system prune -a
-```
-
-### Port Already in Use
-
-If you get a "port already in use" error, you can:
-
-- Stop the conflicting process
-- Change the port in the Docker Compose file
-- Change the PORT in your `.env` file
-
 ## Development Workflow
 
 1. Start the development environment: `make dev-up`
@@ -243,6 +235,114 @@ If you get a "port already in use" error, you can:
 3. Test your changes
 4. View logs if needed: `make logs-dev-backend`
 5. Stop when done: `make dev-down`
+
+---
+
+## Production Deployment
+
+### Frontend (Vercel)
+
+The frontend automatically deploys to Vercel via GitHub Actions:
+
+1. **Initial Setup:**
+   - Connect GitHub repository to Vercel
+   - Vercel automatically detects Next.js
+   - Configure project root: `frontend`
+
+2. **Environment Variables:**
+   - `API_URL` → Backend URL (e.g., `https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net`)
+
+3. **Deployment:**
+   - Push to `main` → Vercel builds and deploys automatically
+   - URL: `https://daw-pi-iava.vercel.app`
+
+### Backend (Azure App Service)
+
+The backend automatically deploys to Azure via GitHub Actions:
+
+1. **Initial Setup:**
+   ```bash
+   # Create App Service
+   - Name: pi-backend
+   - Runtime: Node 22
+   - OS: Linux
+   - Plan: Basic or higher
+   ```
+
+2. **Environment Variables:**
+   - `MYSQL_HOST` → Azure MySQL server
+   - `MYSQL_USER` → MySQL username
+   - `MYSQL_PASSWORD` → MySQL password
+   - `MYSQL_DATABASE` → Database name
+   - `PORT` → 3000 (default)
+
+3. **Deployment:**
+   - Push to `main` → GitHub Actions builds and deploys
+   - URL: `https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net`
+
+### Database (Azure MySQL)
+
+1. **Creation:**
+   ```bash
+   - Type: Azure Database for MySQL - Flexible Server
+   - Name: projecte-db
+   - Admin: juandiegombr
+   - Region: Spain Central
+   ```
+
+2. **Initialize Tables:**
+   ```bash
+   # Connect to Azure MySQL
+   mysql -h projecte-db.mysql.database.azure.com -u juandiegombr -p
+
+   # Tables are automatically created when backend starts
+   # (Sequelize sync)
+   ```
+
+3. **Firewall Configuration:**
+   - Allow connections from Azure App Service
+   - Allow connections from your local IP (development)
+
+---
+
+## Production Troubleshooting
+
+### Frontend Cannot Connect to Backend
+
+**Symptoms:**
+- 503/504 errors on Vercel
+- API calls return 404
+
+**Solutions:**
+1. Verify `API_URL` in Vercel → Settings → Environment Variables
+2. Check backend is running: `https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net/api/sensors`
+3. Review Azure logs: App Service → Log stream
+
+### Backend Fails to Start on Azure
+
+**Symptoms:**
+- Status: Stopped or Failed
+- SSH: Connection closed
+
+**Solutions:**
+1. Verify MySQL environment variables are configured
+2. Verify MySQL connection:
+   ```bash
+   mysql -h projecte-db.mysql.database.azure.com -u juandiegombr -p
+   ```
+3. Review logs: App Service → Log stream
+4. Restart App Service: Click Restart button in Azure Portal
+
+### Database Connection Issues
+
+**Symptoms:**
+- Backend cannot connect to MySQL
+- Error: "connect ETIMEDOUT"
+
+**Solutions:**
+1. Verify Azure MySQL firewall allows App Service
+2. Verify MySQL credentials in environment variables
+3. Check MySQL server is "Available" in Azure Portal
 
 ## License
 

@@ -4,7 +4,9 @@
 
 **Repositorio GitHub:** [https://github.com/juandiegombr/daw.pi.iava](https://github.com/juandiegombr/daw.pi.iava)
 
-**URL aplicación:** [https://d12lcsgk45eqvv.cloudfront.net/](https://d12lcsgk45eqvv.cloudfront.net/)
+**URL aplicación:** [https://daw-pi-iava.vercel.app](https://daw-pi-iava.vercel.app)
+
+**URL API Backend:** [https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net](https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net)
 
 ---
 
@@ -16,11 +18,12 @@
 
 Una aplicación web completa que demuestra prácticas profesionales de desarrollo, incluyendo:
 
-- Arquitectura frontend-backend
-- API RESTfull
-- Containerización con Docker
-- Despliegue en la nube (AWS)
-- Pipeline CI/CD automatizado
+- Arquitectura frontend-backend separada
+- API RESTful con Express.js
+- Base de datos relacional MySQL
+- Containerización con Docker para desarrollo
+- Despliegue en la nube (Azure + Vercel)
+- Pipeline CI/CD automatizado con GitHub Actions
 
 ---
 
@@ -49,27 +52,74 @@ Una aplicación web completa que demuestra prácticas profesionales de desarroll
 ### Backend
 
 - **Node.js** + **Express.js** - API REST
-- **MongoDB** + **Mongoose** - Base de datos NoSQL
+- **MySQL 8.0** + **Sequelize** - Base de datos relacional y ORM
 - **CORS** - Gestión de peticiones cross-origin
+- **SSL/TLS** - Conexiones seguras a base de datos
 
 ### Frontend
 
 - **React** - Biblioteca de interfaz de usuario
-- **Vite** - Herramienta de desarrollo rápida con HMR
+- **Next.js** - Framework React para producción con SSR
+- **Server-Side Rendering (SSR)** - Renderizado del lado del servidor
+- **API Routes** - Reescritura de rutas para proxy de API
 
 ### DevOps
 
-- **Docker** + **Docker Compose** - Containerización
+- **Docker** + **Docker Compose** - Containerización para desarrollo local
 - **GitHub Actions** - CI/CD automatizado
-- **AWS** - Infraestructura en la nube
-  - S3 para frontend estático
-  - EC2 para API backend
-  - CloudFront como CDN
+- **Azure** - Infraestructura en la nube
+  - **App Service** - Backend Node.js con escalado automático
+  - **Azure Database for MySQL** - Base de datos administrada
+  - **Application Insights** - Monitorización y logs
+- **Vercel** - Hosting frontend con CDN global
 
 ---
 
-## Arquitectura
+## Arquitectura en Producción
 
-La aplicación está desplegada en AWS utilizando la siguiente arquitectura:
+La aplicación está desplegada en la nube utilizando una arquitectura moderna que combina servicios de Azure y Vercel:
 
-![Arquitectura AWS](assets/aws.png)
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        Vercel CDN                           │
+│                    (Frontend - Next.js)                     │
+│                 Global Edge Network (180+ PoPs)             │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           ↓ (API calls to)
+┌──────────────────────────────────────────────────────────────┐
+│           Azure App Service (Web App)                        │
+│          (Backend - Node.js Express API)                     │
+│   pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azure...      │
+│          - Auto-scaling habilitado                           │
+│          - Health checks automáticos                         │
+│          - Logs en tiempo real                               │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           ↓ (Database connection)
+┌──────────────────────────────────────────────────────────────┐
+│        Azure Database for MySQL (Flexible Server)           │
+│          projecte-db.mysql.database.azure.com                │
+│          - Backups automáticos (7 días retención)            │
+│          - SSL/TLS obligatorio                               │
+│          - Firewall configurado                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Componentes en Producción
+
+| Componente | Plataforma | URL | Estado |
+|-----------|-----------|-----|--------|
+| **Frontend** | Vercel | [daw-pi-iava.vercel.app](https://daw-pi-iava.vercel.app) | ✅ Activo |
+| **Backend** | Azure App Service | [pi-backend...azurewebsites.net](https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net) | ✅ Activo |
+| **Base de Datos** | Azure MySQL | `projecte-db.mysql.database.azure.com` | ✅ Activo |
+
+### Características de la Arquitectura
+
+- ✅ **Alta Disponibilidad**: Servicios administrados con SLA del 99.9%
+- ✅ **Escalabilidad**: Auto-scaling en App Service y Vercel
+- ✅ **Seguridad**: HTTPS obligatorio, SSL para base de datos, firewall configurado
+- ✅ **Monitorización**: Logs en tiempo real y métricas de rendimiento
+- ✅ **CI/CD**: Despliegue automático desde GitHub
+- ✅ **CDN Global**: Vercel Edge Network con 180+ puntos de presencia
+- ✅ **Backups**: Copias de seguridad automáticas de base de datos
