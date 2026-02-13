@@ -14,7 +14,7 @@ export default function SensorEditForm({ sensor, onSensorUpdated, onClose }) {
     setError(null);
 
     try {
-      const apiUrl = process.env.API_URL || "http://localhost:3000";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(apiUrl + `/api/sensors/${sensor._id}`, {
         method: "PUT",
         headers: {

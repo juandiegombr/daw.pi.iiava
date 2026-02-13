@@ -7,7 +7,7 @@ export async function getServerSideProps(context) {
   const { id } = context.params;
 
   try {
-    const apiUrl = process.env.API_URL || "http://localhost:3000";
+    const apiUrl = process.env.API_URL;
     const response = await fetch(`${apiUrl}/api/sensors/${id}/datapoints`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
