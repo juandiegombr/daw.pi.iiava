@@ -22,15 +22,7 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_COMMIT_HASH: getGitCommitHash(),
     NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),
-  },
-  async rewrites() {
-    const apiUrl = process.env.API_URL || 'http://localhost:3000';
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${apiUrl}/:path*`,
-      },
-    ];
+    NEXT_PUBLIC_API_URL: process.env.API_URL,
   },
 };
 

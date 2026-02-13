@@ -10,7 +10,7 @@ import ConfirmDialog from "../components/ConfirmDialog";
 
 export async function getServerSideProps() {
   try {
-    const apiUrl = process.env.API_URL || "http://localhost:3000";
+    const apiUrl = process.env.API_URL;
     const response = await fetch(`${apiUrl}/api/sensors`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
@@ -64,7 +64,7 @@ export default function SensorsPage({ initialSensors, error: initialError }) {
     setShowDeleteConfirm(false);
 
     try {
-      const apiUrl = process.env.API_URL || "http://test:3000";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(apiUrl + `/api/sensors/${sensorToDelete._id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
