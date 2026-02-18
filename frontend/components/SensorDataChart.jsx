@@ -178,6 +178,12 @@ export default function SensorDataChart({ datapoints, sensor }) {
                 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
                 <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1} />
               </linearGradient>
+              {hasAlertData && (
+                <linearGradient id="colorAlert" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#f97316" stopOpacity={0.05} />
+                </linearGradient>
+              )}
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis
@@ -199,7 +205,7 @@ export default function SensorDataChart({ datapoints, sensor }) {
                 type="monotone"
                 dataKey="alertValue"
                 stroke="#f97316"
-                fill="none"
+                fill="url(#colorAlert)"
                 name="Alerta"
                 strokeWidth={1}
                 strokeDasharray="5 5"
