@@ -176,9 +176,9 @@ async function seed() {
     // Create sample alerts
     console.log("\nCreating sample alerts...");
     const sampleAlerts = [
-      { sensorId: sensors[0].id, condition: ">", value: 82 },
-      { sensorId: sensors[1].id, condition: ">", value: 170 },
-      { sensorId: sensors[3].id, condition: ">", value: 0.4 },
+      { sensorId: sensors[0].id, condition: ">", value: 82, description: "Motor 1 temperature too high" },
+      { sensorId: sensors[1].id, condition: ">", value: 170, description: "Hydraulic pressure warning" },
+      { sensorId: sensors[3].id, condition: ">", value: 0.4, description: "Excessive vibration detected" },
     ];
     await Alert.bulkCreate(sampleAlerts);
     console.log(`${sampleAlerts.length} alerts created`);

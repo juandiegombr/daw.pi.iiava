@@ -22,7 +22,7 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { sensorId, condition, value, enabled } = req.body;
+    const { sensorId, condition, value, description, enabled } = req.body;
 
     if (!sensorId || !condition || value === undefined) {
       return res.status(400).json({ error: "sensorId, condition, and value are required" });
@@ -33,7 +33,7 @@ router.post("/", async (req, res) => {
       return res.status(404).json({ error: "Sensor not found" });
     }
 
-    const alert = await Alert.create({ sensorId, condition, value, enabled });
+    const alert = await Alert.create({ sensorId, condition, value, description, enabled });
     res.status(201).json({ data: { alert } });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -49,10 +49,11 @@ router.put("/:id", async (req, res) => {
       return res.status(404).json({ error: "Alert not found" });
     }
 
-    const { sensorId, condition, value, enabled } = req.body;
+    const { sensorId, condition, value, description, enabled } = req.body;
     if (sensorId !== undefined) alert.sensorId = sensorId;
     if (condition !== undefined) alert.condition = condition;
     if (value !== undefined) alert.value = value;
+    if (description !== undefined) alert.description = description;
     if (enabled !== undefined) alert.enabled = enabled;
 
     await alert.save();
