@@ -10,7 +10,10 @@ export async function getServerSideProps(context) {
     const apiUrl = process.env.API_URL;
     const response = await fetch(`${apiUrl}/api/sensors/${id}/datapoints`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: context.req.headers.cookie || "",
+      },
     });
 
     if (!response.ok) {

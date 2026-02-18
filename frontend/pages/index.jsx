@@ -8,12 +8,15 @@ import SensorForm from "../components/SensorForm";
 import SensorEditForm from "../components/SensorEditForm";
 import ConfirmDialog from "../components/ConfirmDialog";
 
-export async function getServerSideProps() {
+export async function getServerSideProps(context) {
   try {
     const apiUrl = process.env.API_URL;
     const response = await fetch(`${apiUrl}/api/sensors`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: context.req.headers.cookie || "",
+      },
     });
 
     if (!response.ok) {
@@ -67,6 +70,7 @@ export default function SensorsPage({ initialSensors, error: initialError }) {
       const response = await fetch(`/api/sensors/${sensorToDelete._id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
 
       if (!response.ok) {

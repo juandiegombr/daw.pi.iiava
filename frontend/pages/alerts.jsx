@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Head from "next/head";
+import ProtectedRoute from "../components/ProtectedRoute";
 
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState([]);
@@ -23,7 +24,7 @@ export default function AlertsPage() {
 
   const fetchAlerts = async () => {
     try {
-      const response = await fetch("/api/alerts");
+      const response = await fetch("/api/alerts", { credentials: "include" });
       if (!response.ok) throw new Error("Error loading alerts");
       const result = await response.json();
       setAlerts(result.data.alerts);
@@ -36,7 +37,7 @@ export default function AlertsPage() {
 
   const fetchSensors = async () => {
     try {
-      const response = await fetch("/api/sensors");
+      const response = await fetch("/api/sensors", { credentials: "include" });
       if (!response.ok) throw new Error("Error loading sensors");
       const result = await response.json();
       setSensors(result.data.sensors);
@@ -56,6 +57,7 @@ export default function AlertsPage() {
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           ...formData,
           value: parseFloat(formData.value),
@@ -75,7 +77,10 @@ export default function AlertsPage() {
 
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(`/api/alerts/${id}`, { method: "DELETE" });
+      const response = await fetch(`/api/alerts/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Error deleting alert");
       setAlerts((prev) => prev.filter((a) => a._id !== id));
     } catch (err) {
@@ -114,7 +119,7 @@ export default function AlertsPage() {
   };
 
   return (
-    <>
+    <ProtectedRoute>
       <Head>
         <title>Alertas - Industrial Monitor</title>
       </Head>
@@ -304,6 +309,6 @@ export default function AlertsPage() {
           </div>
         )}
       </main>
-    </>
+    </ProtectedRoute>
   );
 }
