@@ -14,22 +14,56 @@ import {
 } from "recharts";
 
 export default function SensorDataChart({ datapoints, sensor }) {
+  // Detect if seconds are needed in timestamp display
+  const needsSeconds = () => {
+    if (datapoints.length < 2) return false;
+    const timestamps = datapoints.map((dp) => new Date(dp.timestamp).getTime());
+    const minDiff = Math.min(
+      ...timestamps.slice(0, -1).map((t, i) => Math.abs(timestamps[i + 1] - t))
+    );
+    return minDiff < 60000; // Less than 1 minute apart
+  };
+
+  const showSeconds = needsSeconds();
+
   // Format timestamp for chart display
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp);
-    return date.toLocaleString("es-ES", {
+    const options = {
       month: "2-digit",
       day: "2-digit",
       hour: "2-digit",
       minute: "2-digit",
-    });
+    };
+    if (showSeconds) {
+      options.second = "2-digit";
+    }
+    return date.toLocaleString("es-ES", options);
   };
+
+  // Calculate decimal places for float values
+  const getDecimalPlaces = () => {
+    if (sensor.type !== "float") return 0;
+    let maxDecimals = 2;
+    for (const dp of datapoints) {
+      if (typeof dp.value === "number") {
+        const str = dp.value.toString();
+        const dotIndex = str.indexOf(".");
+        if (dotIndex !== -1) {
+          maxDecimals = Math.max(maxDecimals, str.length - dotIndex - 1);
+        }
+      }
+    }
+    return Math.min(maxDecimals, 4);
+  };
+
+  const decimalPlaces = getDecimalPlaces();
 
   // Format value for tooltip
   const formatValue = (value, type) => {
     switch (type) {
       case "float":
-        return typeof value === "number" ? value.toFixed(2) : value;
+        return typeof value === "number" ? value.toFixed(decimalPlaces) : value;
       case "boolean":
         return value ? "True" : "False";
       case "int":
@@ -48,6 +82,32 @@ export default function SensorDataChart({ datapoints, sensor }) {
     fullTimestamp: new Date(dp.timestamp).toLocaleString("es-ES"),
   }));
 
+  // Calculate Y-axis domain with padding
+  const getYDomain = () => {
+    const numericValues = chartData
+      .map((d) => d.value)
+      .filter((v) => typeof v === "number");
+    if (numericValues.length === 0) return [0, 1];
+
+    const min = Math.min(...numericValues);
+    const max = Math.max(...numericValues);
+    const padding = (max - min) * 0.1 || 1;
+    return [min - padding, max + padding];
+  };
+
+  // Calculate Y-axis width based on value length
+  const getYAxisWidth = () => {
+    const numericValues = chartData
+      .map((d) => d.value)
+      .filter((v) => typeof v === "number");
+    if (numericValues.length === 0) return 60;
+
+    const maxLen = Math.max(
+      ...numericValues.map((v) => formatValue(v, sensor.type).toString().length)
+    );
+    return Math.max(40, maxLen * 8 + 16);
+  };
+
   // Custom tooltip
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -63,6 +123,9 @@ export default function SensorDataChart({ datapoints, sensor }) {
     return null;
   };
 
+  const yDomain = getYDomain();
+  const yAxisWidth = getYAxisWidth();
+
   // Choose chart type based on sensor type
   const renderChart = () => {
     switch (sensor.type) {
@@ -73,6 +136,7 @@ export default function SensorDataChart({ datapoints, sensor }) {
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis
               dataKey="timestamp"
+              tickFormatter={formatTimestamp}
               tick={{ fontSize: 12 }}
               stroke="#6b7280"
             />
@@ -102,10 +166,16 @@ export default function SensorDataChart({ datapoints, sensor }) {
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis
               dataKey="timestamp"
+              tickFormatter={formatTimestamp}
               tick={{ fontSize: 12 }}
               stroke="#6b7280"
             />
-            <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
+            <YAxis
+              domain={yDomain}
+              tick={{ fontSize: 12 }}
+              stroke="#6b7280"
+              width={yAxisWidth}
+            />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
             <Area
@@ -115,6 +185,7 @@ export default function SensorDataChart({ datapoints, sensor }) {
               fill="url(#colorValue)"
               name="Valor"
               strokeWidth={2}
+              dot={false}
             />
           </AreaChart>
         );
@@ -127,10 +198,16 @@ export default function SensorDataChart({ datapoints, sensor }) {
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis
               dataKey="timestamp"
+              tickFormatter={formatTimestamp}
               tick={{ fontSize: 12 }}
               stroke="#6b7280"
             />
-            <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
+            <YAxis
+              domain={yDomain}
+              tick={{ fontSize: 12 }}
+              stroke="#6b7280"
+              width={yAxisWidth}
+            />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
             <Line
@@ -138,7 +215,7 @@ export default function SensorDataChart({ datapoints, sensor }) {
               dataKey="value"
               stroke="#3b82f6"
               strokeWidth={2}
-              dot={{ fill: "#3b82f6", r: 3 }}
+              dot={false}
               activeDot={{ r: 5 }}
               name="Valor"
             />
