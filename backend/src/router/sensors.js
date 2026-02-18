@@ -1,5 +1,6 @@
 import express from "express";
 import { Sensor, DataPoint } from "../models/index.js";
+import sseService from "../services/sseService.js";
 
 const router = express.Router();
 
@@ -21,6 +22,11 @@ router.post("/", async (req, res) => {
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
+});
+
+// SSE endpoint - must be BEFORE /:id routes
+router.get("/events", (req, res) => {
+  sseService.addClient(res);
 });
 
 router.put("/:id", async (req, res) => {
@@ -112,6 +118,8 @@ router.post("/:id/datapoints", async (req, res) => {
       sensorId: parsedId,
       ...valueFields,
     });
+
+    sseService.sendDatapointCreated(datapoint, sensor);
 
     res.status(201).json({ data: { datapoint } });
   } catch (error) {
