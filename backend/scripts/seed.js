@@ -5,7 +5,7 @@ import { dirname, resolve } from "path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, "../../.env") });
 
-import { sequelize, Sensor, DataPoint } from "../src/models/index.js";
+import { sequelize, Sensor, DataPoint, Alert } from "../src/models/index.js";
 
 const sampleSensors = [
   {
@@ -148,8 +148,9 @@ async function seed() {
     await sequelize.sync();
     console.log("Connected to MySQL");
 
-    // Clear existing data (delete datapoints first due to foreign key)
-    console.log("Clearing existing sensors and datapoints...");
+    // Clear existing data (respect foreign key order)
+    console.log("Clearing existing data...");
+    await Alert.destroy({ where: {} });
     await DataPoint.destroy({ where: {} });
     await Sensor.destroy({ where: {} });
     console.log("Existing data deleted");
@@ -171,6 +172,16 @@ async function seed() {
     await DataPoint.bulkCreate(datapoints);
     console.log(`${datapoints.length} datapoints inserted successfully`);
     console.log(`   ${datapoints.length / sensors.length} datapoints per sensor (24 hours, 5-min intervals)`);
+
+    // Create sample alerts
+    console.log("\nCreating sample alerts...");
+    const sampleAlerts = [
+      { sensorId: sensors[0].id, condition: ">", value: 82 },
+      { sensorId: sensors[1].id, condition: ">", value: 170 },
+      { sensorId: sensors[3].id, condition: ">", value: 0.4 },
+    ];
+    await Alert.bulkCreate(sampleAlerts);
+    console.log(`${sampleAlerts.length} alerts created`);
 
     console.log("\nSeed completed successfully!");
   } catch (error) {
