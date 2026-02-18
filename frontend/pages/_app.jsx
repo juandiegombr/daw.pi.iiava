@@ -1,5 +1,6 @@
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import NotificationListener from "../components/NotificationListener";
 import "../styles/globals.css";
 
 export default function App({ Component, pageProps }) {
@@ -8,6 +9,7 @@ export default function App({ Component, pageProps }) {
       <Header />
       <Component {...pageProps} />
       <Footer />
+      <NotificationListener />
     </div>
   );
 }
