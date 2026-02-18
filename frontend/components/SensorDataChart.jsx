@@ -79,6 +79,8 @@ export default function SensorDataChart({ datapoints, sensor }) {
   const chartData = [...datapoints].reverse().map((dp) => ({
     timestamp: dp.timestamp,
     value: dp.value,
+    alertValue: dp.alertValue !== undefined ? dp.alertValue : null,
+    isAlert: dp.isAlert || false,
     fullTimestamp: new Date(dp.timestamp).toLocaleString("es-ES"),
   }));
 
@@ -89,8 +91,13 @@ export default function SensorDataChart({ datapoints, sensor }) {
       .filter((v) => typeof v === "number");
     if (numericValues.length === 0) return [0, 1];
 
-    const min = Math.min(...numericValues);
-    const max = Math.max(...numericValues);
+    const alertValues = chartData
+      .map((d) => d.alertValue)
+      .filter((v) => typeof v === "number");
+
+    const allValues = [...numericValues, ...alertValues];
+    const min = Math.min(...allValues);
+    const max = Math.max(...allValues);
     const padding = (max - min) * 0.1 || 1;
     return [min - padding, max + padding];
   };
@@ -108,15 +115,24 @@ export default function SensorDataChart({ datapoints, sensor }) {
     return Math.max(40, maxLen * 8 + 16);
   };
 
+  // Check if we have alert data
+  const hasAlertData = chartData.some((d) => d.alertValue !== null);
+
   // Custom tooltip
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
+      const data = payload[0].payload;
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="text-sm text-gray-600">{payload[0].payload.fullTimestamp}</p>
+          <p className="text-sm text-gray-600">{data.fullTimestamp}</p>
           <p className="text-sm font-semibold text-gray-900">
             Valor: {formatValue(payload[0].value, sensor.type)}
           </p>
+          {data.isAlert && (
+            <p className="text-sm font-semibold text-orange-600">
+              Alerta activa
+            </p>
+          )}
         </div>
       );
     }
@@ -178,6 +194,18 @@ export default function SensorDataChart({ datapoints, sensor }) {
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
+            {hasAlertData && (
+              <Area
+                type="monotone"
+                dataKey="alertValue"
+                stroke="#f97316"
+                fill="none"
+                name="Alerta"
+                strokeWidth={1}
+                strokeDasharray="5 5"
+                dot={false}
+              />
+            )}
             <Area
               type="monotone"
               dataKey="value"
@@ -210,6 +238,17 @@ export default function SensorDataChart({ datapoints, sensor }) {
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
+            {hasAlertData && (
+              <Line
+                type="monotone"
+                dataKey="alertValue"
+                stroke="#f97316"
+                strokeWidth={1}
+                strokeDasharray="5 5"
+                dot={false}
+                name="Alerta"
+              />
+            )}
             <Line
               type="monotone"
               dataKey="value"

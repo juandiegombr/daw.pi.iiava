@@ -1,5 +1,5 @@
 import express from "express";
-import { Sensor, DataPoint } from "../models/index.js";
+import { Sensor, DataPoint, Alert } from "../models/index.js";
 import sseService from "../services/sseService.js";
 
 const router = express.Router();
@@ -83,10 +83,43 @@ router.get("/:id/datapoints", async (req, res) => {
       order: [["timestamp", "DESC"]],
     });
 
+    // Get enabled alerts for this sensor
+    const alerts = await Alert.findAll({
+      where: { sensorId: parsedId, enabled: true },
+    });
+
+    // Check each datapoint against alerts
+    const datapointsWithAlerts = datapoints.map((dp) => {
+      const dpJson = dp.toJSON();
+      dpJson.isAlert = false;
+
+      for (const alert of alerts) {
+        const val = dpJson.value;
+        if (typeof val !== "number") continue;
+
+        let triggered = false;
+        switch (alert.condition) {
+          case ">": triggered = val > alert.value; break;
+          case "<": triggered = val < alert.value; break;
+          case ">=": triggered = val >= alert.value; break;
+          case "<=": triggered = val <= alert.value; break;
+          case "==": triggered = val == alert.value; break;
+          case "!=": triggered = val != alert.value; break;
+        }
+        if (triggered) {
+          dpJson.isAlert = true;
+          dpJson.alertValue = alert.value;
+          break;
+        }
+      }
+
+      return dpJson;
+    });
+
     res.json({
       data: {
         sensor,
-        datapoints,
+        datapoints: datapointsWithAlerts,
       },
     });
   } catch (error) {
@@ -120,6 +153,29 @@ router.post("/:id/datapoints", async (req, res) => {
     });
 
     sseService.sendDatapointCreated(datapoint, sensor);
+
+    // Check alerts
+    const alerts = await Alert.findAll({
+      where: { sensorId: parsedId, enabled: true },
+    });
+
+    for (const alert of alerts) {
+      const val = datapoint.toJSON().value;
+      if (typeof val !== "number") continue;
+
+      let triggered = false;
+      switch (alert.condition) {
+        case ">": triggered = val > alert.value; break;
+        case "<": triggered = val < alert.value; break;
+        case ">=": triggered = val >= alert.value; break;
+        case "<=": triggered = val <= alert.value; break;
+        case "==": triggered = val == alert.value; break;
+        case "!=": triggered = val != alert.value; break;
+      }
+      if (triggered) {
+        sseService.sendAlertTriggered(alert, datapoint, sensor);
+      }
+    }
 
     res.status(201).json({ data: { datapoint } });
   } catch (error) {
