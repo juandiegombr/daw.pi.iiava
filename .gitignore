@@ -9,6 +9,7 @@
 
 # Environment files
 /.env
+/.env.prod
 /backend/.env
 
 # Debug logs
