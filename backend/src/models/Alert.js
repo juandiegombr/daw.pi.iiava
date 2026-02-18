@@ -25,6 +25,10 @@ const Alert = sequelize.define(
       type: DataTypes.FLOAT,
       allowNull: false,
     },
+    description: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
     enabled: {
       type: DataTypes.BOOLEAN,
       allowNull: false,

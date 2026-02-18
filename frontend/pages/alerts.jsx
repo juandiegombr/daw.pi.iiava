@@ -12,6 +12,7 @@ export default function AlertsPage() {
     sensorId: "",
     condition: ">",
     value: "",
+    description: "",
     enabled: true,
   });
 
@@ -88,6 +89,7 @@ export default function AlertsPage() {
       sensorId: alert.sensorId,
       condition: alert.condition,
       value: alert.value.toString(),
+      description: alert.description || "",
       enabled: alert.enabled,
     });
     setShowForm(true);
@@ -98,6 +100,7 @@ export default function AlertsPage() {
       sensorId: sensors[0]?._id || "",
       condition: ">",
       value: "",
+      description: "",
       enabled: true,
     });
   };
@@ -158,6 +161,9 @@ export default function AlertsPage() {
                       {alert.condition} {alert.value}
                     </span>
                   </div>
+                  {alert.description && (
+                    <p className="text-sm text-gray-600 mt-1 ml-4">{alert.description}</p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -244,6 +250,21 @@ export default function AlertsPage() {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-1">
+                    Descripción
+                  </label>
+                  <input
+                    type="text"
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Descripción de la alerta"
+                  />
                 </div>
 
                 <div className="flex items-center gap-2">
