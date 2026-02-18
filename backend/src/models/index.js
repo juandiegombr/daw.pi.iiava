@@ -1,6 +1,7 @@
 import sequelize from "../db/sequelize.js";
 import Sensor from "./Sensor.js";
 import DataPoint from "./DataPoint.js";
+import Alert from "./Alert.js";
 
 // Define associations
 Sensor.hasMany(DataPoint, {
@@ -12,4 +13,13 @@ DataPoint.belongsTo(Sensor, {
   foreignKey: "sensorId",
 });
 
-export { sequelize, Sensor, DataPoint };
+Sensor.hasMany(Alert, {
+  foreignKey: "sensorId",
+  onDelete: "CASCADE",
+});
+
+Alert.belongsTo(Sensor, {
+  foreignKey: "sensorId",
+});
+
+export { sequelize, Sensor, DataPoint, Alert };
