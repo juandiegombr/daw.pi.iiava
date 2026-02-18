@@ -19,6 +19,7 @@ export default function SensorEditForm({ sensor, onSensorUpdated, onClose }) {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(formData),
       });
 

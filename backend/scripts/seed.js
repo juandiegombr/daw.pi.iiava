@@ -5,7 +5,7 @@ import { dirname, resolve } from "path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, "../../.env") });
 
-import { sequelize, Sensor, DataPoint, Alert } from "../src/models/index.js";
+import { sequelize, Sensor, DataPoint, Alert, User } from "../src/models/index.js";
 
 const sampleSensors = [
   {
@@ -153,7 +153,13 @@ async function seed() {
     await Alert.destroy({ where: {} });
     await DataPoint.destroy({ where: {} });
     await Sensor.destroy({ where: {} });
+    await User.destroy({ where: {} });
     console.log("Existing data deleted");
+
+    // Create default admin user
+    console.log("Creating default admin user...");
+    await User.create({ username: "admin", password: "admin123", role: "admin" });
+    console.log("Admin user created (admin/admin123)");
 
     // Insert sample sensors
     console.log("Inserting sample sensors...");

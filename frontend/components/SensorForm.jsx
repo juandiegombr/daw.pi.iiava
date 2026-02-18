@@ -20,6 +20,7 @@ export default function SensorForm({ onSensorAdded }) {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(formData),
       });
 
