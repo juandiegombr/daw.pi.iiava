@@ -11,6 +11,22 @@ import ConfirmDialog from "../components/ConfirmDialog";
 export async function getServerSideProps(context) {
   try {
     const apiUrl = process.env.API_URL;
+
+    const authResponse = await fetch(`${apiUrl}/api/auth/me`, {
+      headers: {
+        Cookie: context.req.headers.cookie || "",
+      },
+    });
+
+    if (!authResponse.ok) {
+      return {
+        redirect: {
+          destination: "/login",
+          permanent: false,
+        },
+      };
+    }
+
     const response = await fetch(`${apiUrl}/api/sensors`, {
       method: "GET",
       headers: {
