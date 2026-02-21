@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import ErrorMessage from "../../../components/ErrorMessage";
@@ -24,7 +25,7 @@ export async function getServerSideProps(context) {
     return {
       props: {
         sensor: result.data.sensor,
-        datapoints: result.data.datapoints,
+        initialDatapoints: result.data.datapoints,
         error: null,
       },
     };
@@ -32,14 +33,61 @@ export async function getServerSideProps(context) {
     return {
       props: {
         sensor: null,
-        datapoints: [],
+        initialDatapoints: [],
         error: error.message,
       },
     };
   }
 }
 
-export default function SensorDataPointsPage({ sensor, datapoints, error }) {
+export default function SensorDataPointsPage({ sensor, initialDatapoints, error }) {
+  const [datapoints, setDatapoints] = useState(initialDatapoints);
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [filtering, setFiltering] = useState(false);
+
+  const applyFilter = async () => {
+    setFiltering(true);
+    try {
+      const params = new URLSearchParams();
+      if (from) params.set("from", new Date(from).toISOString());
+      if (to) params.set("to", new Date(to).toISOString());
+
+      const response = await fetch(
+        `/api/sensors/${sensor._id}/datapoints?${params.toString()}`,
+        { credentials: "include" }
+      );
+      if (response.ok) {
+        const result = await response.json();
+        setDatapoints(result.data.datapoints);
+      }
+    } catch {
+      // Keep current datapoints on error
+    } finally {
+      setFiltering(false);
+    }
+  };
+
+  const clearFilter = async () => {
+    setFrom("");
+    setTo("");
+    setFiltering(true);
+    try {
+      const response = await fetch(
+        `/api/sensors/${sensor._id}/datapoints`,
+        { credentials: "include" }
+      );
+      if (response.ok) {
+        const result = await response.json();
+        setDatapoints(result.data.datapoints);
+      }
+    } catch {
+      // Keep current datapoints on error
+    } finally {
+      setFiltering(false);
+    }
+  };
+
   if (error) {
     return (
       <>
@@ -103,6 +151,47 @@ export default function SensorDataPointsPage({ sensor, datapoints, error }) {
           </div>
         )}
 
+        {/* Date Range Filter */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-sm font-medium text-gray-700 mb-3">Filtrar por fecha</h2>
+          <div className="flex flex-wrap items-end gap-3">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Desde</label>
+              <input
+                type="datetime-local"
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Hasta</label>
+              <input
+                type="datetime-local"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <button
+              onClick={applyFilter}
+              disabled={filtering || (!from && !to)}
+              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+            >
+              {filtering ? "Filtrando..." : "Filtrar"}
+            </button>
+            {(from || to) && (
+              <button
+                onClick={clearFilter}
+                disabled={filtering}
+                className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300 transition-colors disabled:bg-gray-100"
+              >
+                Limpiar
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Datapoints Chart */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
@@ -133,7 +222,9 @@ export default function SensorDataPointsPage({ sensor, datapoints, error }) {
                 No hay datos
               </h3>
               <p className="mt-1 text-sm text-gray-500">
-                Este sensor aún no tiene lecturas registradas.
+                {from || to
+                  ? "No hay lecturas en el rango seleccionado."
+                  : "Este sensor aún no tiene lecturas registradas."}
               </p>
             </div>
           ) : (
