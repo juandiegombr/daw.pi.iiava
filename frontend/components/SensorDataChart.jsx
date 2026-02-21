@@ -117,6 +117,38 @@ export default function SensorDataChart({ datapoints, sensor }) {
 
   // Check if we have alert data
   const hasAlertData = chartData.some((d) => d.alertValue !== null);
+  const hasAlertPoints = chartData.some((d) => d.isAlert);
+
+  // Build gradient stops to color alert line segments orange
+  const alertLineStops = (() => {
+    if (!hasAlertPoints || chartData.length < 2) return null;
+    const n = chartData.length - 1;
+    const segmentColors = [];
+
+    for (let i = 0; i < n; i++) {
+      segmentColors.push(
+        chartData[i].isAlert || chartData[i + 1].isAlert
+          ? "#f97316"
+          : "#3b82f6"
+      );
+    }
+
+    const stops = [{ offset: 0, color: segmentColors[0] }];
+
+    for (let i = 1; i < segmentColors.length; i++) {
+      if (segmentColors[i] !== segmentColors[i - 1]) {
+        const boundary = i / n;
+        stops.push({ offset: boundary, color: segmentColors[i - 1] });
+        stops.push({ offset: boundary, color: segmentColors[i] });
+      }
+    }
+
+    stops.push({
+      offset: 1,
+      color: segmentColors[segmentColors.length - 1],
+    });
+    return stops;
+  })();
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload }) => {
@@ -184,6 +216,13 @@ export default function SensorDataChart({ datapoints, sensor }) {
                   <stop offset="95%" stopColor="#f97316" stopOpacity={0.05} />
                 </linearGradient>
               )}
+              {alertLineStops && (
+                <linearGradient id="alertLineGradient" x1="0" y1="0" x2="1" y2="0">
+                  {alertLineStops.map((s, i) => (
+                    <stop key={i} offset={s.offset} stopColor={s.color} />
+                  ))}
+                </linearGradient>
+              )}
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis
@@ -215,7 +254,7 @@ export default function SensorDataChart({ datapoints, sensor }) {
             <Area
               type="monotone"
               dataKey="value"
-              stroke="#3b82f6"
+              stroke={alertLineStops ? "url(#alertLineGradient)" : "#3b82f6"}
               fill="url(#colorValue)"
               name="Valor"
               strokeWidth={2}
@@ -229,6 +268,15 @@ export default function SensorDataChart({ datapoints, sensor }) {
         // Line chart for integer values
         return (
           <LineChart data={chartData}>
+            {alertLineStops && (
+              <defs>
+                <linearGradient id="alertLineGradient" x1="0" y1="0" x2="1" y2="0">
+                  {alertLineStops.map((s, i) => (
+                    <stop key={i} offset={s.offset} stopColor={s.color} />
+                  ))}
+                </linearGradient>
+              </defs>
+            )}
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis
               dataKey="timestamp"
@@ -258,7 +306,7 @@ export default function SensorDataChart({ datapoints, sensor }) {
             <Line
               type="monotone"
               dataKey="value"
-              stroke="#3b82f6"
+              stroke={alertLineStops ? "url(#alertLineGradient)" : "#3b82f6"}
               strokeWidth={2}
               dot={false}
               activeDot={{ r: 5 }}

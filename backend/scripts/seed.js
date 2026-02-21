@@ -159,6 +159,7 @@ async function seed() {
     // Create default admin user
     console.log("Creating default admin user...");
     await User.create({ username: "admin", password: "admin123", role: "admin" });
+    await User.create({ username: "test", password: "test123", role: "user" });
     console.log("Admin user created (admin/admin123)");
 
     // Insert sample sensors
