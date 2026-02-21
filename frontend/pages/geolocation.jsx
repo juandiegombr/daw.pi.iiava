@@ -1,40 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Head from "next/head";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 export default function GeolocationPage() {
   const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [sending, setSending] = useState(false);
   const [sensors, setSensors] = useState([]);
   const [selectedSensor, setSelectedSensor] = useState("");
-  const [success, setSuccess] = useState(null);
-
-  const getLocation = () => {
-    if (!navigator.geolocation) {
-      setError("Geolocation is not supported by your browser");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-        });
-        setLoading(false);
-      },
-      (err) => {
-        setError(`Error getting location: ${err.message}`);
-        setLoading(false);
-      }
-    );
-  };
+  const [selectedProperty, setSelectedProperty] = useState("latlon");
+  const [tracking, setTracking] = useState(false);
+  const [sendCount, setSendCount] = useState(0);
+  const watchIdRef = useRef(null);
 
   useEffect(() => {
     async function fetchSensors() {
@@ -51,29 +27,99 @@ export default function GeolocationPage() {
     fetchSensors();
   }, []);
 
-  const sendLocation = async () => {
-    if (!location || !selectedSensor) return;
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
+  }, []);
 
-    setSending(true);
-    setError(null);
-    setSuccess(null);
+  const PROPERTIES = [
+    { value: "latlon", label: "Latitud, Longitud" },
+    { value: "latitude", label: "Latitud" },
+    { value: "longitude", label: "Longitud" },
+    { value: "accuracy", label: "Precisión (m)" },
+    { value: "altitude", label: "Altitud (m)" },
+    { value: "speed", label: "Velocidad (m/s)" },
+    { value: "heading", label: "Rumbo (°)" },
+  ];
 
-    try {
-      const value = `${location.latitude},${location.longitude}`;
-      const response = await fetch(`/api/sensors/${selectedSensor}/datapoints`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ value }),
-      });
-
-      if (!response.ok) throw new Error("Error sending location");
-      setSuccess("Location sent successfully");
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSending(false);
+  const getPropertyValue = (coords) => {
+    switch (selectedProperty) {
+      case "latlon":
+        return `${coords.latitude},${coords.longitude}`;
+      case "latitude":
+        return String(coords.latitude);
+      case "longitude":
+        return String(coords.longitude);
+      case "accuracy":
+        return String(coords.accuracy);
+      case "altitude":
+        return coords.altitude != null ? String(coords.altitude) : null;
+      case "speed":
+        return coords.speed != null ? String(coords.speed) : null;
+      case "heading":
+        return coords.heading != null ? String(coords.heading) : null;
+      default:
+        return null;
     }
+  };
+
+  const startTracking = () => {
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported by your browser");
+      return;
+    }
+    if (!selectedSensor) return;
+
+    setError(null);
+    setSendCount(0);
+    setTracking(true);
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      async (position) => {
+        const coords = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          altitude: position.coords.altitude,
+          speed: position.coords.speed,
+          heading: position.coords.heading,
+        };
+        setLocation(coords);
+
+        const value = getPropertyValue(coords);
+        if (value === null) return;
+
+        try {
+          const response = await fetch(`/api/sensors/${selectedSensor}/datapoints`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ value }),
+          });
+          if (response.ok) {
+            setSendCount((c) => c + 1);
+          }
+        } catch {
+          // Send errors are non-fatal during tracking
+        }
+      },
+      (err) => {
+        setError(`Error getting location: ${err.message}`);
+        stopTracking();
+      },
+      { enableHighAccuracy: true }
+    );
+  };
+
+  const stopTracking = () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    setTracking(false);
   };
 
   return (
@@ -91,21 +137,54 @@ export default function GeolocationPage() {
             </div>
           )}
 
-          {success && (
-            <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
-              {success}
-            </div>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Sensor
+            </label>
+            <select
+              value={selectedSensor}
+              onChange={(e) => setSelectedSensor(e.target.value)}
+              disabled={tracking}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+            >
+              <option value="">Seleccionar sensor</option>
+              {sensors.map((s) => (
+                <option key={s._id} value={s._id}>
+                  {s.alias}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div>
-            <button
-              onClick={getLocation}
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400"
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Propiedad a enviar
+            </label>
+            <select
+              value={selectedProperty}
+              onChange={(e) => setSelectedProperty(e.target.value)}
+              disabled={tracking}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
             >
-              {loading ? "Obteniendo ubicación..." : "Obtener Ubicación"}
-            </button>
+              {PROPERTIES.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
           </div>
+
+          <button
+            onClick={tracking ? stopTracking : startTracking}
+            disabled={!tracking && !selectedSensor}
+            className={`w-full px-4 py-2 text-white rounded-lg transition-colors disabled:bg-gray-400 ${
+              tracking
+                ? "bg-red-600 hover:bg-red-700"
+                : "bg-green-600 hover:bg-green-700"
+            }`}
+          >
+            {tracking ? "Detener envío" : "Iniciar envío"}
+          </button>
 
           {location && (
             <div className="bg-gray-50 rounded-lg p-4">
@@ -119,29 +198,20 @@ export default function GeolocationPage() {
               <p className="text-sm text-gray-600">
                 Precisión: <span className="font-mono">{location.accuracy.toFixed(1)}m</span>
               </p>
-
-              <div className="mt-4 space-y-2">
-                <select
-                  value={selectedSensor}
-                  onChange={(e) => setSelectedSensor(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Seleccionar sensor</option>
-                  {sensors.map((s) => (
-                    <option key={s._id} value={s._id}>
-                      {s.alias}
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  onClick={sendLocation}
-                  disabled={sending || !selectedSensor}
-                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-green-400"
-                >
-                  {sending ? "Enviando..." : "Enviar Ubicación"}
-                </button>
-              </div>
+              <p className="text-sm text-gray-600">
+                Altitud: <span className="font-mono">{location.altitude != null ? `${location.altitude.toFixed(1)}m` : "N/A"}</span>
+              </p>
+              <p className="text-sm text-gray-600">
+                Velocidad: <span className="font-mono">{location.speed != null ? `${location.speed.toFixed(2)} m/s` : "N/A"}</span>
+              </p>
+              <p className="text-sm text-gray-600">
+                Rumbo: <span className="font-mono">{location.heading != null ? `${location.heading.toFixed(1)}°` : "N/A"}</span>
+              </p>
+              {tracking && (
+                <p className="text-sm text-green-700 mt-2 font-medium">
+                  Envíos realizados: {sendCount}
+                </p>
+              )}
             </div>
           )}
         </div>
