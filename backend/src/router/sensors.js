@@ -1,4 +1,5 @@
 import express from "express";
+import { Op } from "sequelize";
 import { Sensor, DataPoint, Alert } from "../models/index.js";
 import sseService from "../services/sseService.js";
 
@@ -78,8 +79,16 @@ router.get("/:id/datapoints", async (req, res) => {
       return res.status(404).json({ error: "Sensor not found" });
     }
 
+    const { from, to } = req.query;
+    const where = { sensorId: parsedId };
+    if (from || to) {
+      where.timestamp = {};
+      if (from) where.timestamp[Op.gte] = new Date(from);
+      if (to) where.timestamp[Op.lte] = new Date(to);
+    }
+
     const datapoints = await DataPoint.findAll({
-      where: { sensorId: parsedId },
+      where,
       order: [["timestamp", "DESC"]],
     });
 
