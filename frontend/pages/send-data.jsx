@@ -115,7 +115,7 @@ export default function SendDataPage() {
   };
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute adminOnly>
       <Head>
         <title>Enviar Datos - Industrial Monitor</title>
       </Head>
