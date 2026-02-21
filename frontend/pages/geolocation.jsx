@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Head from "next/head";
 import ProtectedRoute from "../components/ProtectedRoute";
 
@@ -36,17 +36,20 @@ export default function GeolocationPage() {
     );
   };
 
-  const fetchSensors = async () => {
-    try {
-      const response = await fetch("/api/sensors", { credentials: "include" });
-      if (response.ok) {
-        const result = await response.json();
-        setSensors(result.data.sensors.filter((s) => s.type === "string"));
+  useEffect(() => {
+    async function fetchSensors() {
+      try {
+        const response = await fetch("/api/sensors", { credentials: "include" });
+        if (response.ok) {
+          const result = await response.json();
+          setSensors(result.data.sensors);
+        }
+      } catch {
+        // Silently handle
       }
-    } catch {
-      // Silently handle
     }
-  };
+    fetchSensors();
+  }, []);
 
   const sendLocation = async () => {
     if (!location || !selectedSensor) return;
@@ -121,10 +124,9 @@ export default function GeolocationPage() {
                 <select
                   value={selectedSensor}
                   onChange={(e) => setSelectedSensor(e.target.value)}
-                  onFocus={fetchSensors}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">Seleccionar sensor (tipo string)</option>
+                  <option value="">Seleccionar sensor</option>
                   {sensors.map((s) => (
                     <option key={s._id} value={s._id}>
                       {s.alias}
