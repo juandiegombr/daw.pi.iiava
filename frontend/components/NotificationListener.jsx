@@ -46,7 +46,7 @@ export default function NotificationListener() {
   if (!toast) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-50 animate-pulse">
+    <div className="fixed top-4 right-4 z-50">
       <div
         className={`px-4 py-3 rounded-lg shadow-lg text-white max-w-sm ${
           toast.type === "alert" ? "bg-orange-500" : "bg-blue-500"
