@@ -27,6 +27,9 @@ dev-upf: ## Start development environment (foreground)
 dev-down: ## Stop development environment
 	$(COMPOSE) -f docker-compose.dev.yml down
 
+dev-remove: ## Stop development environment
+	$(COMPOSE) -f docker-compose.dev.yml down -v
+
 dev-rebuild: dev-build dev-up ## Rebuild and restart development environment
 
 logs-dev-backend: ## View backend logs in development
