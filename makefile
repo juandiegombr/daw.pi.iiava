@@ -5,7 +5,7 @@ help: ## Show this help message
 	@echo "Available commands:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: dev-build dev-up dev-upf dev-down dev-rebuild logs-dev-backend seed
+.PHONY: dev-build dev-up dev-upf dev-down dev-rebuild logs-dev-backend seed seed-user
 .PHONY: prod-build prod-up prod-upf prod-down prod-rebuild logs-prod-backend
 .PHONY: test-frontend test-backend
 
@@ -37,6 +37,9 @@ logs-dev-backend: ## View backend logs in development
 
 seed: ## Populate database with sample sensors
 	$(COMPOSE) -f docker-compose.dev.yml exec backend npm run seed
+
+seed-user: ## Create a custom user interactively
+	$(COMPOSE) -f docker-compose.dev.yml exec -it backend npm run seed:user
 
 prod-build: ## Build production Docker containers
 	$(COMPOSE) -f docker-compose.yml build --no-cache
