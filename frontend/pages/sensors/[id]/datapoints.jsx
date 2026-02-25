@@ -1,21 +1,38 @@
 import { useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import ErrorMessage from "../../../components/ErrorMessage";
 import SensorDataChart from "../../../components/SensorDataChart";
 
+function toDatetimeLocal(isoString) {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 export async function getServerSideProps(context) {
   const { id } = context.params;
+  const { from, to } = context.query;
 
   try {
     const apiUrl = process.env.API_URL;
-    const response = await fetch(`${apiUrl}/api/sensors/${id}/datapoints`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: context.req.headers.cookie || "",
-      },
-    });
+    const params = new URLSearchParams();
+    if (from) params.set("from", from);
+    if (to) params.set("to", to);
+    const qs = params.toString();
+
+    const response = await fetch(
+      `${apiUrl}/api/sensors/${id}/datapoints${qs ? `?${qs}` : ""}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: context.req.headers.cookie || "",
+        },
+      }
+    );
 
     if (!response.ok) {
       throw new Error("Error al cargar los datos del sensor");
@@ -26,6 +43,8 @@ export async function getServerSideProps(context) {
       props: {
         sensor: result.data.sensor,
         initialDatapoints: result.data.datapoints,
+        initialFrom: from || "",
+        initialTo: to || "",
         error: null,
       },
     };
@@ -34,16 +53,19 @@ export async function getServerSideProps(context) {
       props: {
         sensor: null,
         initialDatapoints: [],
+        initialFrom: from || "",
+        initialTo: to || "",
         error: error.message,
       },
     };
   }
 }
 
-export default function SensorDataPointsPage({ sensor, initialDatapoints, error }) {
+export default function SensorDataPointsPage({ sensor, initialDatapoints, initialFrom, initialTo, error }) {
+  const router = useRouter();
   const [datapoints, setDatapoints] = useState(initialDatapoints);
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [from, setFrom] = useState(toDatetimeLocal(initialFrom));
+  const [to, setTo] = useState(toDatetimeLocal(initialTo));
   const [filtering, setFiltering] = useState(false);
 
   const applyFilter = async () => {
@@ -60,6 +82,11 @@ export default function SensorDataPointsPage({ sensor, initialDatapoints, error 
       if (response.ok) {
         const result = await response.json();
         setDatapoints(result.data.datapoints);
+
+        const query = {};
+        if (from) query.from = new Date(from).toISOString();
+        if (to) query.to = new Date(to).toISOString();
+        router.replace({ pathname: router.pathname, query: { id: sensor._id, ...query } }, undefined, { shallow: true });
       }
     } catch {
       // Keep current datapoints on error
@@ -80,6 +107,7 @@ export default function SensorDataPointsPage({ sensor, initialDatapoints, error 
       if (response.ok) {
         const result = await response.json();
         setDatapoints(result.data.datapoints);
+        router.replace({ pathname: router.pathname, query: { id: sensor._id } }, undefined, { shallow: true });
       }
     } catch {
       // Keep current datapoints on error
