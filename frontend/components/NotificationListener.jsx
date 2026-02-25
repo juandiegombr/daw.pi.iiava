@@ -13,7 +13,19 @@ export default function NotificationListener() {
     }
   }, []);
 
-  // Handle alert notifications
+  // Handle datapoint notifications (declared first so alert toast takes priority)
+  useEffect(() => {
+    if (!lastDatapoint) return;
+
+    const { sensor } = lastDatapoint;
+    const message = `New data received for ${sensor?.alias || "sensor"}`;
+
+    setToast({ message, type: "info" });
+    const timer = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(timer);
+  }, [lastDatapoint]);
+
+  // Handle alert notifications (declared last so it overwrites info toast)
   useEffect(() => {
     if (!lastAlert) return;
 
@@ -30,18 +42,6 @@ export default function NotificationListener() {
     const timer = setTimeout(() => setToast(null), 5000);
     return () => clearTimeout(timer);
   }, [lastAlert]);
-
-  // Handle datapoint notifications
-  useEffect(() => {
-    if (!lastDatapoint) return;
-
-    const { sensor } = lastDatapoint;
-    const message = `New data received for ${sensor?.alias || "sensor"}`;
-
-    setToast({ message, type: "info" });
-    const timer = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(timer);
-  }, [lastDatapoint]);
 
   if (!toast) return null;
 
