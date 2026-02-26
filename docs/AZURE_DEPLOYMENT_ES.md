@@ -33,8 +33,8 @@ La aplicación está desplegada utilizando una arquitectura cloud moderna que co
 
 | Componente | Plataforma | URL | Estado |
 |-----------|-----------|-----|--------|
-| **Frontend** | Vercel | [https://daw-pi-iava.vercel.app](https://daw-pi-iava.vercel.app) | ✅ Producción |
-| **Backend** | Azure App Service | [https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net](https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net) | ✅ Producción |
+| **Frontend** | Vercel | [https://daw-pi-iiava.vercel.app](https://daw-pi-iiava.vercel.app) | ✅ Producción |
+| **Backend** | Azure App Service | [https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net](https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net) | ✅ Producción |
 | **Base de Datos** | Azure MySQL | `projecte-db.mysql.database.azure.com` | ✅ Producción |
 
 **Beneficios Clave:**
@@ -159,7 +159,7 @@ Clic en **"Guardar"** después de añadir todas las variables.
 2. **Origen**: GitHub
 3. **Autorizar GitHub** y seleccionar:
    - **Organización**: Tu nombre de usuario de GitHub
-   - **Repositorio**: daw.pi.iava
+   - **Repositorio**: daw.pi.iiava
    - **Rama**: main
 
 4. Azure creará automáticamente un archivo de flujo de trabajo de GitHub Actions
@@ -242,7 +242,7 @@ Después de hacer push a main, verificar:
 
 ```bash
 # Probar endpoint de API
-curl https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net/api/sensors
+curl https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net/api/sensors
 
 # Respuesta esperada (con tus datos)
 {
@@ -263,7 +263,7 @@ curl https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net/api/s
 1. **Ir a** [vercel.com](https://vercel.com)
 2. **Iniciar sesión** con GitHub
 3. **Clic en "Add New Project"**
-4. **Importar Repositorio Git**: Seleccionar `daw.pi.iava`
+4. **Importar Repositorio Git**: Seleccionar `daw.pi.iiava`
 5. **Configurar Proyecto**:
    - **Framework Preset**: Next.js (detectado automáticamente)
    - **Directorio raíz**: `frontend`
@@ -278,7 +278,7 @@ Añadir la siguiente variable:
 
 | Nombre | Valor |
 |------|-------|
-| `API_URL` | `https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net` |
+| `API_URL` | `https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net` |
 
 **Nota**: Esto se usa para llamadas API del lado del servidor. Las llamadas del lado del cliente usan la configuración de reescritura en `next.config.js`.
 
@@ -288,11 +288,11 @@ Vercel despliega automáticamente en:
 - Cada push a la rama `main`
 - Cada pull request (despliegues de vista previa)
 
-**URL de Producción**: `https://daw-pi-iava.vercel.app`
+**URL de Producción**: `https://daw-pi-iiava.vercel.app`
 
 ### Paso 4: Verificar Despliegue del Frontend
 
-1. Visitar: [https://daw-pi-iava.vercel.app](https://daw-pi-iava.vercel.app)
+1. Visitar: [https://daw-pi-iiava.vercel.app](https://daw-pi-iiava.vercel.app)
 2. Verificar que los sensores se cargan correctamente
 3. Probar crear/editar/eliminar sensores
 
@@ -371,7 +371,7 @@ az webapp log tail --name pi-backend --resource-group tu-grupo-recursos
 
 1. **Fallan las Llamadas API**
    - Verificar que la variable de entorno API_URL está configurada
-   - Comprobar que el backend responde: `curl https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net/api/sensors`
+   - Comprobar que el backend responde: `curl https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net/api/sensors`
    - Revisar la consola del navegador para errores CORS
 
 2. **Fallos de Compilación**

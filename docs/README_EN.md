@@ -67,8 +67,8 @@ To understand the full project vision, use cases, and system architecture:
 
 | Component | Platform | URL | Status |
 |-----------|----------|-----|--------|
-| **Frontend** | Vercel | [https://daw-pi-iava.vercel.app](https://daw-pi-iava.vercel.app) | ✅ Production |
-| **Backend** | Azure App Service | [https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net](https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net) | ✅ Production |
+| **Frontend** | Vercel | [https://daw-pi-iiava.vercel.app](https://daw-pi-iiava.vercel.app) | ✅ Production |
+| **Backend** | Azure App Service | [https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net](https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net) | ✅ Production |
 | **Database** | Azure MySQL | `projecte-db.mysql.database.azure.com` | ✅ Production |
 
 ---
@@ -91,7 +91,7 @@ Before setting up the project, make sure you have the following installed:
 ## Project Structure
 
 ```
-daw.pi.iava/
+daw.pi.iiava/
 ├── backend/          # Express.js API
 ├── frontend/         # React application
 ├── docker-compose.yml       # Production Docker configuration
@@ -106,8 +106,8 @@ daw.pi.iava/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/juandiegombr/daw.pi.iava.git
-cd daw.pi.iava
+git clone https://github.com/juandiegombr/daw.pi.iiava.git
+cd daw.pi.iiava
 ```
 
 ### 2. Configure Environment Variables
@@ -250,11 +250,11 @@ The frontend automatically deploys to Vercel via GitHub Actions:
    - Configure project root: `frontend`
 
 2. **Environment Variables:**
-   - `API_URL` → Backend URL (e.g., `https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net`)
+   - `API_URL` → Backend URL (e.g., `https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net`)
 
 3. **Deployment:**
    - Push to `main` → Vercel builds and deploys automatically
-   - URL: `https://daw-pi-iava.vercel.app`
+   - URL: `https://daw-pi-iiava.vercel.app`
 
 ### Backend (Azure App Service)
 
@@ -278,7 +278,7 @@ The backend automatically deploys to Azure via GitHub Actions:
 
 3. **Deployment:**
    - Push to `main` → GitHub Actions builds and deploys
-   - URL: `https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net`
+   - URL: `https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net`
 
 ### Database (Azure MySQL)
 
@@ -315,7 +315,7 @@ The backend automatically deploys to Azure via GitHub Actions:
 
 **Solutions:**
 1. Verify `API_URL` in Vercel → Settings → Environment Variables
-2. Check backend is running: `https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net/api/sensors`
+2. Check backend is running: `https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net/api/sensors`
 3. Review Azure logs: App Service → Log stream
 
 ### Backend Fails to Start on Azure

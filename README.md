@@ -67,8 +67,8 @@ Para entender la visión completa del proyecto, casos de uso y arquitectura del 
 
 | Componente | Plataforma | URL | Estado |
 |-----------|-----------|-----|--------|
-| **Frontend** | Vercel | [https://daw-pi-iava.vercel.app](https://daw-pi-iava.vercel.app) | ✅ Producción |
-| **Backend** | Azure App Service | [https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net](https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net) | ✅ Producción |
+| **Frontend** | Vercel | [https://daw-pi-iiava.vercel.app](https://daw-pi-iiava.vercel.app) | ✅ Producción |
+| **Backend** | Azure App Service | [https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net](https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net) | ✅ Producción |
 | **Base de Datos** | Azure MySQL | `projecte-db.mysql.database.azure.com` | ✅ Producción |
 
 ---
@@ -91,7 +91,7 @@ Antes de configurar el proyecto, asegúrate de tener instalado lo siguiente:
 ## Estructura del Proyecto
 
 ```
-daw.pi.iava/
+daw.pi.iiava/
 ├── backend/          # API Express.js
 ├── frontend/         # Aplicación React
 ├── docker-compose.yml       # Configuración Docker de producción
@@ -106,8 +106,8 @@ daw.pi.iava/
 ### 1. Clonar el Repositorio
 
 ```bash
-git clone https://github.com/juandiegombr/daw.pi.iava.git
-cd daw.pi.iava
+git clone https://github.com/juandiegombr/daw.pi.iiava.git
+cd daw.pi.iiava
 ```
 
 ### 2. Configurar Variables de Entorno
@@ -294,11 +294,11 @@ El frontend se despliega automáticamente a Vercel mediante GitHub Actions:
    - Configurar raíz de proyecto: `frontend`
 
 2. **Variables de Entorno:**
-   - `API_URL` → URL del backend (ej: `https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net`)
+   - `API_URL` → URL del backend (ej: `https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net`)
 
 3. **Despliegue:**
    - Empuja a `main` → Vercel construye y despliega automáticamente
-   - URL: `https://daw-pi-iava.vercel.app`
+   - URL: `https://daw-pi-iiava.vercel.app`
 
 ### Backend (Azure App Service)
 
@@ -322,7 +322,7 @@ El backend se despliega automáticamente a Azure mediante GitHub Actions:
 
 3. **Despliegue:**
    - Empuja a `main` → GitHub Actions construye y despliega
-   - URL: `https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net`
+   - URL: `https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net`
 
 ### Base de Datos (Azure MySQL)
 

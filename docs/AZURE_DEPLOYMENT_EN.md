@@ -33,8 +33,8 @@ The application is deployed using a modern cloud architecture combining Azure an
 
 | Component | Platform | URL | Status |
 |-----------|----------|-----|--------|
-| **Frontend** | Vercel | [https://daw-pi-iava.vercel.app](https://daw-pi-iava.vercel.app) | ✅ Production |
-| **Backend** | Azure App Service | [https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net](https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net) | ✅ Production |
+| **Frontend** | Vercel | [https://daw-pi-iiava.vercel.app](https://daw-pi-iiava.vercel.app) | ✅ Production |
+| **Backend** | Azure App Service | [https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net](https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net) | ✅ Production |
 | **Database** | Azure MySQL | `projecte-db.mysql.database.azure.com` | ✅ Production |
 
 **Key Benefits:**
@@ -159,7 +159,7 @@ Click **"Save"** after adding all variables.
 2. **Source**: GitHub
 3. **Authorize GitHub** and select:
    - **Organization**: Your GitHub username
-   - **Repository**: daw.pi.iava
+   - **Repository**: daw.pi.iiava
    - **Branch**: main
 
 4. Azure will automatically create a GitHub Actions workflow file
@@ -242,7 +242,7 @@ After pushing to main, check:
 
 ```bash
 # Test API endpoint
-curl https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net/api/sensors
+curl https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net/api/sensors
 
 # Expected response (with your data)
 {
@@ -263,7 +263,7 @@ curl https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net/api/s
 1. **Go to** [vercel.com](https://vercel.com)
 2. **Sign in** with GitHub
 3. **Click "Add New Project"**
-4. **Import Git Repository**: Select `daw.pi.iava`
+4. **Import Git Repository**: Select `daw.pi.iiava`
 5. **Configure Project**:
    - **Framework Preset**: Next.js (auto-detected)
    - **Root Directory**: `frontend`
@@ -278,7 +278,7 @@ Add the following variable:
 
 | Name | Value |
 |------|-------|
-| `API_URL` | `https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net` |
+| `API_URL` | `https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net` |
 
 **Note**: This is used for server-side API calls. Client-side calls use the rewrite configuration in `next.config.js`.
 
@@ -288,11 +288,11 @@ Vercel automatically deploys on:
 - Every push to `main` branch
 - Every pull request (preview deployments)
 
-**Production URL**: `https://daw-pi-iava.vercel.app`
+**Production URL**: `https://daw-pi-iiava.vercel.app`
 
 ### Step 4: Verify Frontend Deployment
 
-1. Visit: [https://daw-pi-iava.vercel.app](https://daw-pi-iava.vercel.app)
+1. Visit: [https://daw-pi-iiava.vercel.app](https://daw-pi-iiava.vercel.app)
 2. Check that sensors load correctly
 3. Test creating/editing/deleting sensors
 
@@ -371,7 +371,7 @@ az webapp log tail --name pi-backend --resource-group your-resource-group
 
 1. **API Calls Failing**
    - Verify API_URL environment variable is set
-   - Check backend is responding: `curl https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net/api/sensors`
+   - Check backend is responding: `curl https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net/api/sensors`
    - Check browser console for CORS errors
 
 2. **Build Failures**

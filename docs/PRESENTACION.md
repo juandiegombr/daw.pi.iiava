@@ -2,11 +2,11 @@
 
 ## Información del Repositorio
 
-**Repositorio GitHub:** [https://github.com/juandiegombr/daw.pi.iava](https://github.com/juandiegombr/daw.pi.iava)
+**Repositorio GitHub:** [https://github.com/juandiegombr/daw.pi.iiava](https://github.com/juandiegombr/daw.pi.iiava)
 
-**URL aplicación:** [https://daw-pi-iava.vercel.app](https://daw-pi-iava.vercel.app)
+**URL aplicación:** [https://daw-pi-iiava.vercel.app](https://daw-pi-iiava.vercel.app)
 
-**URL API Backend:** [https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net](https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net)
+**URL API Backend:** [https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net](https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net)
 
 ---
 
@@ -110,8 +110,8 @@ La aplicación está desplegada en la nube utilizando una arquitectura moderna q
 
 | Componente | Plataforma | URL | Estado |
 |-----------|-----------|-----|--------|
-| **Frontend** | Vercel | [daw-pi-iava.vercel.app](https://daw-pi-iava.vercel.app) | ✅ Activo |
-| **Backend** | Azure App Service | [pi-backend...azurewebsites.net](https://pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azurewebsites.net) | ✅ Activo |
+| **Frontend** | Vercel | [daw-pi-iiava.vercel.app](https://daw-pi-iiava.vercel.app) | ✅ Activo |
+| **Backend** | Azure App Service | [pi-backend...azurewebsites.net](https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net) | ✅ Activo |
 | **Base de Datos** | Azure MySQL | `projecte-db.mysql.database.azure.com` | ✅ Activo |
 
 ### Características de la Arquitectura
