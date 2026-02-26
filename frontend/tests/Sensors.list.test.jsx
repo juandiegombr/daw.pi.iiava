@@ -40,7 +40,7 @@ describe("Sensor List", () => {
     expect(screen.getByRole("heading", { name: "⚙️ Industrial Monitor" })).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Monitor de señales de sensores de máquinas industriales en tiempo real"
+        "Monitor de máquinas industriales en tiempo real"
       )
     ).toBeInTheDocument();
   });
@@ -55,7 +55,7 @@ describe("Sensor List", () => {
     expect(screen.getByRole("heading", { name: "⚙️ Industrial Monitor" })).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Monitor de señales de sensores de máquinas industriales en tiempo real"
+        "Monitor de máquinas industriales en tiempo real"
       )
     ).toBeInTheDocument();
     expect(
