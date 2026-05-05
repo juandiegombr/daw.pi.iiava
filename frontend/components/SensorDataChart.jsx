@@ -233,6 +233,7 @@ export default function SensorDataChart({ datapoints, sensor }) {
             />
             <YAxis
               domain={yDomain}
+              tickFormatter={(v) => Number(v).toFixed(3)}
               tick={{ fontSize: 12 }}
               stroke="#6b7280"
               width={yAxisWidth}
@@ -286,6 +287,7 @@ export default function SensorDataChart({ datapoints, sensor }) {
             />
             <YAxis
               domain={yDomain}
+              tickFormatter={(v) => Math.round(v)}
               tick={{ fontSize: 12 }}
               stroke="#6b7280"
               width={yAxisWidth}
