@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import Head from "next/head";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 export default function SendDataPage() {
@@ -116,9 +115,6 @@ export default function SendDataPage() {
 
   return (
     <ProtectedRoute adminOnly>
-      <Head>
-        <title>Enviar Datos - Industrial Monitor</title>
-      </Head>
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Enviar Datos</h1>
 

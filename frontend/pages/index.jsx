@@ -1,5 +1,4 @@
-import { useState } from "react";
-import Head from "next/head";
+import { useState, useEffect } from "react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorMessage from "../components/ErrorMessage";
 import EmptyState from "../components/EmptyState";
@@ -8,62 +7,34 @@ import SensorForm from "../components/SensorForm";
 import SensorEditForm from "../components/SensorEditForm";
 import ConfirmDialog from "../components/ConfirmDialog";
 
-export async function getServerSideProps(context) {
-  try {
-    const apiUrl = process.env.API_URL;
-
-    const authResponse = await fetch(`${apiUrl}/api/auth/me`, {
-      headers: {
-        Cookie: context.req.headers.cookie || "",
-      },
-    });
-
-    if (!authResponse.ok) {
-      return {
-        redirect: {
-          destination: "/login",
-          permanent: false,
-        },
-      };
-    }
-
-    const response = await fetch(`${apiUrl}/api/sensors`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: context.req.headers.cookie || "",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Error al cargar los sensores");
-    }
-
-    const result = await response.json();
-    return {
-      props: {
-        initialSensors: result.data.sensors,
-        error: null,
-      },
-    };
-  } catch (error) {
-    return {
-      props: {
-        initialSensors: [],
-        error: error.message,
-      },
-    };
-  }
-}
-
-export default function SensorsPage({ initialSensors, error: initialError }) {
-  const [sensors, setSensors] = useState(initialSensors);
+export default function SensorsPage({ initialSensors = null, error: initialError = null }) {
+  const [sensors, setSensors] = useState(initialSensors || []);
   const [error, setError] = useState(initialError);
+  const [loading, setLoading] = useState(initialSensors === null && !initialError);
   const [deletingSensorId, setDeletingSensorId] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
   const [editingSensor, setEditingSensor] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [sensorToDelete, setSensorToDelete] = useState(null);
+
+  useEffect(() => {
+    if (initialSensors === null && !initialError) {
+      fetchSensors();
+    }
+  }, []);
+
+  const fetchSensors = async () => {
+    try {
+      const response = await fetch("/api/sensors", { credentials: "include" });
+      if (!response.ok) throw new Error("Error al cargar los sensores");
+      const result = await response.json();
+      setSensors(result.data.sensors);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSensorAdded = (newSensor) => {
     setSensors((prev) => [...prev, newSensor]);
@@ -125,11 +96,16 @@ export default function SensorsPage({ initialSensors, error: initialError }) {
     setEditingSensor(null);
   };
 
+  if (loading) {
+    return (
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <LoadingSpinner />
+      </main>
+    );
+  }
+
   return (
     <>
-      <Head>
-        <title>Industrial Monitor</title>
-      </Head>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {deleteError && (
           <div className="mb-4">

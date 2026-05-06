@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/router";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Header() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
-  const { pathname } = useRouter();
+  const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -25,7 +24,7 @@ export default function Header() {
         <div className="flex items-center justify-between">
           <div>
             <Link
-              href="/"
+              to="/"
               className="text-2xl font-bold text-blue-800 flex items-center"
             >
               <span className="mr-2">⚙️</span>
@@ -41,18 +40,18 @@ export default function Header() {
               {/* Desktop nav */}
               <div className="hidden md:flex items-center gap-4">
                 <nav className="flex items-center gap-3">
-                  <Link href="/" className={linkClass("/")}>
+                  <Link to="/" className={linkClass("/")}>
                     Sensores
                   </Link>
-                  <Link href="/alerts" className={linkClass("/alerts")}>
+                  <Link to="/alerts" className={linkClass("/alerts")}>
                     Alertas
                   </Link>
                   {isAdmin && (
                     <>
-                      <Link href="/send-data" className={linkClass("/send-data")}>
+                      <Link to="/send-data" className={linkClass("/send-data")}>
                         Enviar Datos
                       </Link>
-                      <Link href="/geolocation" className={linkClass("/geolocation")}>
+                      <Link to="/geolocation" className={linkClass("/geolocation")}>
                         Geolocalización
                       </Link>
                     </>
@@ -114,18 +113,18 @@ export default function Header() {
         {isAuthenticated && menuOpen && (
           <div className="md:hidden mt-3 pt-3 border-t border-gray-200 flex flex-col gap-3">
             <nav className="flex flex-col gap-2">
-              <Link href="/" className={linkClass("/")}>
+              <Link to="/" className={linkClass("/")}>
                 Sensores
               </Link>
-              <Link href="/alerts" className={linkClass("/alerts")}>
+              <Link to="/alerts" className={linkClass("/alerts")}>
                 Alertas
               </Link>
               {isAdmin && (
                 <>
-                  <Link href="/send-data" className={linkClass("/send-data")}>
+                  <Link to="/send-data" className={linkClass("/send-data")}>
                     Enviar Datos
                   </Link>
-                  <Link href="/geolocation" className={linkClass("/geolocation")}>
+                  <Link to="/geolocation" className={linkClass("/geolocation")}>
                     Geolocalización
                   </Link>
                 </>

@@ -1,19 +1,19 @@
 import { useEffect } from "react";
-import { useRouter } from "next/router";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function ProtectedRoute({ children, adminOnly = false }) {
   const { isAuthenticated, isAdmin, loading } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.push("/login");
+      navigate("/login");
     }
     if (!loading && adminOnly && !isAdmin) {
-      router.push("/");
+      navigate("/");
     }
-  }, [loading, isAuthenticated, isAdmin, adminOnly, router]);
+  }, [loading, isAuthenticated, isAdmin, adminOnly, navigate]);
 
   if (loading) {
     return (

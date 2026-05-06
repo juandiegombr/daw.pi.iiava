@@ -1,12 +1,12 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { useRouter } from "next/router";
+import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     checkAuth();
@@ -70,7 +70,7 @@ export function AuthProvider({ children }) {
       credentials: "include",
     });
     setUser(null);
-    router.push("/login");
+    navigate("/login");
   };
 
   const value = {

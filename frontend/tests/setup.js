@@ -3,38 +3,34 @@ import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import React from 'react';
 
-// Mock next/router
-vi.mock('next/router', () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-    prefetch: vi.fn(),
-    query: {},
-    pathname: '/',
-    asPath: '/',
-    events: {
-      on: vi.fn(),
-      off: vi.fn(),
-      emit: vi.fn(),
-    },
+// Mock react-router-dom
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    useNavigate: () => vi.fn(),
+    useParams: () => ({ id: 'test-sensor-id' }),
+    useLocation: () => ({ pathname: '/' }),
+    useSearchParams: () => [new URLSearchParams(), vi.fn()],
+    Link: ({ children, to, ...props }) =>
+      React.createElement('a', { href: to, ...props }, children),
+    BrowserRouter: ({ children }) => children,
+  };
+});
+
+// Mock AuthContext so components using useAuth work without a Provider
+vi.mock('../contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: null,
+    isAuthenticated: false,
+    isAdmin: false,
+    loading: false,
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
   }),
+  AuthProvider: ({ children }) => children,
 }));
-
-// Mock next/link
-vi.mock('next/link', () => {
-  return {
-    default: ({ children, href, ...props }) => {
-      return React.createElement('a', { href, ...props }, children);
-    },
-  };
-});
-
-// Mock next/head
-vi.mock('next/head', () => {
-  return {
-    default: ({ children }) => children,
-  };
-});
 
 // Mock recharts to avoid warnings and disable animations in tests
 vi.mock("recharts", async (importOriginal) => {
@@ -75,7 +71,6 @@ vi.mock("recharts", async (importOriginal) => {
   };
 });
 
-// Cleanup after each test case
 afterEach(() => {
   cleanup();
 });
