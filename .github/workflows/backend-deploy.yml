@@ -20,7 +20,7 @@ jobs:
           username: ${{ secrets.AWS_EC2_USER }}
           key: ${{ secrets.AWS_EC2_SSH }}
           script: |
-            cd ~/daw.pi.iava/backend
+            cd ~/daw.pi.iiava/backend
             git pull origin main
             docker stop backend-container || true
             docker rm backend-container || true
