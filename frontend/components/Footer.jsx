@@ -1,7 +1,6 @@
 export default function Footer() {
-  // These variables are injected at build time by Next.js
-  const commitHash = process.env.NEXT_PUBLIC_COMMIT_HASH || 'dev';
-  const buildTime = process.env.NEXT_PUBLIC_BUILD_TIME || new Date().toISOString();
+  const commitHash = typeof __COMMIT_HASH__ !== 'undefined' ? __COMMIT_HASH__ : 'dev';
+  const buildTime = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : new Date().toISOString();
 
   const formatBuildTime = (isoString) => {
     try {
