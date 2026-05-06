@@ -11,4 +11,6 @@ sequelize
   .then(() => console.log("MySQL connected and synced"))
   .catch((err) => console.error("Error connecting to MySQL:", err));
 
-app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Backend running on port ${PORT}`);
+});
