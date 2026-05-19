@@ -11,22 +11,21 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  ReferenceLine,
 } from "recharts";
 
 export default function SensorDataChart({ datapoints, sensor }) {
-  // Detect if seconds are needed in timestamp display
   const needsSeconds = () => {
     if (datapoints.length < 2) return false;
     const timestamps = datapoints.map((dp) => new Date(dp.timestamp).getTime());
     const minDiff = Math.min(
       ...timestamps.slice(0, -1).map((t, i) => Math.abs(timestamps[i + 1] - t))
     );
-    return minDiff < 60000; // Less than 1 minute apart
+    return minDiff < 60000;
   };
 
   const showSeconds = needsSeconds();
 
-  // Format timestamp for chart display
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp);
     const options = {
@@ -41,7 +40,6 @@ export default function SensorDataChart({ datapoints, sensor }) {
     return date.toLocaleString("es-ES", options);
   };
 
-  // Calculate decimal places for float values
   const getDecimalPlaces = () => {
     if (sensor.type !== "float") return 0;
     let maxDecimals = 2;
@@ -59,7 +57,6 @@ export default function SensorDataChart({ datapoints, sensor }) {
 
   const decimalPlaces = getDecimalPlaces();
 
-  // Format value for tooltip
   const formatValue = (value, type) => {
     switch (type) {
       case "float":
@@ -75,34 +72,34 @@ export default function SensorDataChart({ datapoints, sensor }) {
     }
   };
 
-  // Prepare data for chart (reverse to show oldest to newest)
   const chartData = [...datapoints].reverse().map((dp) => ({
     timestamp: dp.timestamp,
     value: dp.value,
-    alertValue: dp.alertValue !== undefined ? dp.alertValue : null,
     isAlert: dp.isAlert || false,
     fullTimestamp: new Date(dp.timestamp).toLocaleString("es-ES"),
   }));
 
-  // Calculate Y-axis domain with padding
+  const alertThresholds = [
+    ...new Set(
+      datapoints
+        .map((dp) => dp.alertValue)
+        .filter((v) => v !== undefined && v !== null)
+    ),
+  ];
+
   const getYDomain = () => {
     const numericValues = chartData
       .map((d) => d.value)
       .filter((v) => typeof v === "number");
     if (numericValues.length === 0) return [0, 1];
 
-    const alertValues = chartData
-      .map((d) => d.alertValue)
-      .filter((v) => typeof v === "number");
-
-    const allValues = [...numericValues, ...alertValues];
+    const allValues = [...numericValues, ...alertThresholds];
     const min = Math.min(...allValues);
     const max = Math.max(...allValues);
     const padding = (max - min) * 0.1 || 1;
     return [min - padding, max + padding];
   };
 
-  // Calculate Y-axis width based on value length
   const getYAxisWidth = () => {
     const numericValues = chartData
       .map((d) => d.value)
@@ -115,42 +112,6 @@ export default function SensorDataChart({ datapoints, sensor }) {
     return Math.max(40, maxLen * 8 + 16);
   };
 
-  // Check if we have alert data
-  const hasAlertData = chartData.some((d) => d.alertValue !== null);
-  const hasAlertPoints = chartData.some((d) => d.isAlert);
-
-  // Build gradient stops to color alert line segments orange
-  const alertLineStops = (() => {
-    if (!hasAlertPoints || chartData.length < 2) return null;
-    const n = chartData.length - 1;
-    const segmentColors = [];
-
-    for (let i = 0; i < n; i++) {
-      segmentColors.push(
-        chartData[i].isAlert || chartData[i + 1].isAlert
-          ? "#f97316"
-          : "#3b82f6"
-      );
-    }
-
-    const stops = [{ offset: 0, color: segmentColors[0] }];
-
-    for (let i = 1; i < segmentColors.length; i++) {
-      if (segmentColors[i] !== segmentColors[i - 1]) {
-        const boundary = i / n;
-        stops.push({ offset: boundary, color: segmentColors[i - 1] });
-        stops.push({ offset: boundary, color: segmentColors[i] });
-      }
-    }
-
-    stops.push({
-      offset: 1,
-      color: segmentColors[segmentColors.length - 1],
-    });
-    return stops;
-  })();
-
-  // Custom tooltip
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -171,14 +132,43 @@ export default function SensorDataChart({ datapoints, sensor }) {
     return null;
   };
 
+  const alertDot = (props) => {
+    const { cx, cy, payload } = props;
+    if (!payload.isAlert) return null;
+    return (
+      <circle
+        key={`alert-dot-${payload.timestamp}`}
+        cx={cx}
+        cy={cy}
+        r={4}
+        fill="#f97316"
+        stroke="#fff"
+        strokeWidth={1}
+      />
+    );
+  };
+
+  const alertActiveDot = (props) => {
+    const { cx, cy, payload } = props;
+    return (
+      <circle
+        key={`active-dot-${payload.timestamp}`}
+        cx={cx}
+        cy={cy}
+        r={5}
+        fill={payload.isAlert ? "#f97316" : "#3b82f6"}
+        stroke="#fff"
+        strokeWidth={2}
+      />
+    );
+  };
+
   const yDomain = getYDomain();
   const yAxisWidth = getYAxisWidth();
 
-  // Choose chart type based on sensor type
   const renderChart = () => {
     switch (sensor.type) {
       case "boolean":
-        // Bar chart for boolean values
         return (
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -202,7 +192,6 @@ export default function SensorDataChart({ datapoints, sensor }) {
         );
 
       case "float":
-        // Area chart for float values
         return (
           <AreaChart data={chartData}>
             <defs>
@@ -210,19 +199,6 @@ export default function SensorDataChart({ datapoints, sensor }) {
                 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
                 <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1} />
               </linearGradient>
-              {hasAlertData && (
-                <linearGradient id="colorAlert" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#f97316" stopOpacity={0.05} />
-                </linearGradient>
-              )}
-              {alertLineStops && (
-                <linearGradient id="alertLineGradient" x1="0" y1="0" x2="1" y2="0">
-                  {alertLineStops.map((s, i) => (
-                    <stop key={i} offset={s.offset} stopColor={s.color} />
-                  ))}
-                </linearGradient>
-              )}
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis
@@ -240,44 +216,32 @@ export default function SensorDataChart({ datapoints, sensor }) {
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
-            {hasAlertData && (
-              <Area
-                type="monotone"
-                dataKey="alertValue"
+            {alertThresholds.map((threshold) => (
+              <ReferenceLine
+                key={threshold}
+                y={threshold}
                 stroke="#f97316"
-                fill="url(#colorAlert)"
-                name="Alerta"
-                strokeWidth={1}
                 strokeDasharray="5 5"
-                dot={false}
+                strokeWidth={1.5}
               />
-            )}
+            ))}
             <Area
               type="monotone"
               dataKey="value"
-              stroke={alertLineStops ? "url(#alertLineGradient)" : "#3b82f6"}
+              stroke="#3b82f6"
               fill="url(#colorValue)"
               name="Valor"
               strokeWidth={2}
-              dot={false}
+              dot={alertDot}
+              activeDot={alertActiveDot}
             />
           </AreaChart>
         );
 
       case "int":
       default:
-        // Line chart for integer values
         return (
           <LineChart data={chartData}>
-            {alertLineStops && (
-              <defs>
-                <linearGradient id="alertLineGradient" x1="0" y1="0" x2="1" y2="0">
-                  {alertLineStops.map((s, i) => (
-                    <stop key={i} offset={s.offset} stopColor={s.color} />
-                  ))}
-                </linearGradient>
-              </defs>
-            )}
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis
               dataKey="timestamp"
@@ -294,24 +258,22 @@ export default function SensorDataChart({ datapoints, sensor }) {
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
-            {hasAlertData && (
-              <Line
-                type="monotone"
-                dataKey="alertValue"
+            {alertThresholds.map((threshold) => (
+              <ReferenceLine
+                key={threshold}
+                y={threshold}
                 stroke="#f97316"
-                strokeWidth={1}
                 strokeDasharray="5 5"
-                dot={false}
-                name="Alerta"
+                strokeWidth={1.5}
               />
-            )}
+            ))}
             <Line
               type="monotone"
               dataKey="value"
-              stroke={alertLineStops ? "url(#alertLineGradient)" : "#3b82f6"}
+              stroke="#3b82f6"
               strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 5 }}
+              dot={alertDot}
+              activeDot={alertActiveDot}
               name="Valor"
             />
           </LineChart>
@@ -319,7 +281,6 @@ export default function SensorDataChart({ datapoints, sensor }) {
     }
   };
 
-  // Handle string type separately (no chart needed)
   if (sensor.type === "string") {
     return (
       <div className="w-full h-96">
