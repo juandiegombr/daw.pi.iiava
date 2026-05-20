@@ -12,11 +12,11 @@ export default function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={onCancel}
     >
       <div
-        className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+        className="bg-white rounded-lg shadow-xl border border-slate-200 max-w-md w-full p-6"
         role="dialog"
         aria-labelledby="confirm-dialog-title"
         aria-describedby="confirm-dialog-message"
@@ -29,10 +29,10 @@ export default function ConfirmDialog({
             </svg>
           </div>
           <div className="flex-1">
-            <h3 id="confirm-dialog-title" className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 id="confirm-dialog-title" className="text-lg font-semibold text-slate-900 mb-2 tracking-tight">
               {title}
             </h3>
-            <p id="confirm-dialog-message" className="text-sm text-gray-600">
+            <p id="confirm-dialog-message" className="text-sm text-slate-600 leading-relaxed">
               {message}
             </p>
           </div>
@@ -42,14 +42,14 @@ export default function ConfirmDialog({
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
           >
             {cancelText}
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors ${confirmButtonClass}`}
+            className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors cursor-pointer ${confirmButtonClass}`}
           >
             {confirmText}
           </button>

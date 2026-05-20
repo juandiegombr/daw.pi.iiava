@@ -4,9 +4,9 @@ export default function SensorList({ sensors, onDeleteSensor, onEditSensor, dele
   return (
     <>
       <div className="mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800">
+        <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">
           Sensores Activos
-          <span className="ml-3 text-lg font-normal text-gray-600">
+          <span className="ml-3 text-lg font-normal text-slate-500 font-mono tracking-[0.04em]">
             ({sensors.length} {sensors.length === 1 ? "sensor" : "sensores"})
           </span>
         </h2>

@@ -116,14 +116,15 @@ export default function SensorDataChart({ datapoints, sensor }) {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="text-sm text-gray-600">{data.fullTimestamp}</p>
-          <p className="text-sm font-semibold text-gray-900">
-            Valor: {formatValue(payload[0].value, sensor.type)}
+        <div className="bg-white p-3 border border-slate-200 rounded-lg shadow-lg">
+          <p className="text-xs font-mono text-slate-500 tracking-[0.04em]">{data.fullTimestamp}</p>
+          <p className="text-sm font-semibold text-slate-900 mt-1">
+            <span className="text-[10px] font-mono tracking-[0.18em] text-slate-500 mr-2">VALOR</span>
+            <span className="font-mono">{formatValue(payload[0].value, sensor.type)}</span>
           </p>
           {data.isAlert && (
-            <p className="text-sm font-semibold text-orange-600">
-              Alerta activa
+            <p className="text-xs font-mono tracking-[0.18em] text-red-600 mt-1">
+              ● ALERTA ACTIVA
             </p>
           )}
         </div>
@@ -141,7 +142,7 @@ export default function SensorDataChart({ datapoints, sensor }) {
         cx={cx}
         cy={cy}
         r={4}
-        fill="#f97316"
+        fill="#dc2626"
         stroke="#fff"
         strokeWidth={1}
       />
@@ -171,19 +172,19 @@ export default function SensorDataChart({ datapoints, sensor }) {
       case "boolean":
         return (
           <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis
               dataKey="timestamp"
               tickFormatter={formatTimestamp}
               tick={{ fontSize: 12 }}
-              stroke="#6b7280"
+              stroke="#64748b"
             />
             <YAxis
               domain={[0, 1]}
               ticks={[0, 1]}
               tickFormatter={(value) => (value ? "True" : "False")}
               tick={{ fontSize: 12 }}
-              stroke="#6b7280"
+              stroke="#64748b"
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
@@ -200,18 +201,18 @@ export default function SensorDataChart({ datapoints, sensor }) {
                 <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis
               dataKey="timestamp"
               tickFormatter={formatTimestamp}
               tick={{ fontSize: 12 }}
-              stroke="#6b7280"
+              stroke="#64748b"
             />
             <YAxis
               domain={yDomain}
               tickFormatter={(v) => Number(v).toFixed(3)}
               tick={{ fontSize: 12 }}
-              stroke="#6b7280"
+              stroke="#64748b"
               width={yAxisWidth}
             />
             <Tooltip content={<CustomTooltip />} />
@@ -220,7 +221,7 @@ export default function SensorDataChart({ datapoints, sensor }) {
               <ReferenceLine
                 key={threshold}
                 y={threshold}
-                stroke="#f97316"
+                stroke="#dc2626"
                 strokeDasharray="5 5"
                 strokeWidth={1.5}
               />
@@ -242,18 +243,18 @@ export default function SensorDataChart({ datapoints, sensor }) {
       default:
         return (
           <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis
               dataKey="timestamp"
               tickFormatter={formatTimestamp}
               tick={{ fontSize: 12 }}
-              stroke="#6b7280"
+              stroke="#64748b"
             />
             <YAxis
               domain={yDomain}
               tickFormatter={(v) => Math.round(v)}
               tick={{ fontSize: 12 }}
-              stroke="#6b7280"
+              stroke="#64748b"
               width={yAxisWidth}
             />
             <Tooltip content={<CustomTooltip />} />
@@ -262,7 +263,7 @@ export default function SensorDataChart({ datapoints, sensor }) {
               <ReferenceLine
                 key={threshold}
                 y={threshold}
-                stroke="#f97316"
+                stroke="#dc2626"
                 strokeDasharray="5 5"
                 strokeWidth={1.5}
               />
@@ -287,7 +288,7 @@ export default function SensorDataChart({ datapoints, sensor }) {
         <div className="flex items-center justify-center h-full">
           <div className="text-center px-6 py-8">
             <svg
-              className="mx-auto h-16 w-16 text-gray-400 mb-4"
+              className="mx-auto h-16 w-16 text-slate-400 mb-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -299,14 +300,14 @@ export default function SensorDataChart({ datapoints, sensor }) {
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            <h3 className="mt-2 text-base font-medium text-gray-900">
+            <h3 className="mt-2 text-base font-semibold text-slate-900 tracking-tight">
               Visualización no disponible
             </h3>
-            <p className="mt-2 text-sm text-gray-500 max-w-sm mx-auto">
+            <p className="mt-2 text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
               Los datos de tipo texto no se pueden visualizar en gráficos.
               Los valores se almacenan como cadenas de texto.
             </p>
-            <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700">
+            <div className="mt-4 inline-flex items-center px-3 py-1 rounded bg-blue-50 text-blue-700 border border-blue-200">
               <svg
                 className="w-4 h-4 mr-2"
                 fill="none"

@@ -80,7 +80,7 @@ export default function SendDataPage() {
             value={value}
             onChange={(e) => setValue(e.target.value)}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">Seleccionar valor</option>
             <option value="true">True</option>
@@ -94,7 +94,7 @@ export default function SendDataPage() {
             value={value}
             onChange={(e) => setValue(e.target.value)}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Enter text value"
           />
         );
@@ -106,7 +106,7 @@ export default function SendDataPage() {
             onChange={(e) => setValue(e.target.value)}
             required
             step={selectedSensor.type === "float" ? "any" : "1"}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder={`Enter ${selectedSensor.type} value`}
           />
         );
@@ -116,7 +116,7 @@ export default function SendDataPage() {
   return (
     <ProtectedRoute adminOnly>
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Enviar Datos</h1>
+        <h1 className="text-2xl font-bold text-slate-800 mb-6">Enviar Datos</h1>
 
         <div className="bg-white rounded-lg shadow-md p-6">
           {error && (
@@ -126,14 +126,14 @@ export default function SendDataPage() {
           )}
 
           {success && (
-            <div className="mb-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+            <div className="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg">
               {success}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="sensor" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="sensor" className="block text-sm font-semibold text-slate-700 mb-2">
                 Sensor
               </label>
               <select
@@ -141,7 +141,7 @@ export default function SendDataPage() {
                 value={selectedSensor?._id || ""}
                 onChange={handleSensorChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Seleccionar sensor</option>
                 {sensors.map((s) => (
@@ -154,7 +154,7 @@ export default function SendDataPage() {
 
             {selectedSensor && (
               <div>
-                <label htmlFor="value" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="value" className="block text-sm font-semibold text-slate-700 mb-2">
                   Valor ({selectedSensor.type})
                 </label>
                 {renderValueInput()}

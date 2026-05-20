@@ -135,7 +135,7 @@ export default function SensorDataPointsPage({
       {/* Back Button */}
       <Link
         to="/"
-        className="mb-6 flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+        className="mb-6 flex items-center text-blue-600 hover:text-blue-700 transition-colors"
       >
         <svg
           className="w-5 h-5 mr-2"
@@ -156,14 +156,14 @@ export default function SensorDataPointsPage({
       {/* Sensor Info */}
       {sensor && (
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">
+          <h1 className="text-2xl font-bold text-slate-800 mb-2">
             {sensor.alias}
           </h1>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-slate-600">
               Tipo: <span className="font-semibold">{sensor.type}</span>
             </span>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-slate-600">
               ID: <span className="font-mono text-xs">{sensor._id}</span>
             </span>
           </div>
@@ -172,30 +172,30 @@ export default function SensorDataPointsPage({
 
       {/* Date Range Filter */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-sm font-medium text-gray-700 mb-3">Filtrar por fecha</h2>
+        <h2 className="text-sm font-medium text-slate-700 mb-3">Filtrar por fecha</h2>
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Desde</label>
+            <label className="block text-xs text-slate-500 mb-1">Desde</label>
             <input
               type="datetime-local"
               value={from}
               onChange={(e) => setFrom(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Hasta</label>
+            <label className="block text-xs text-slate-500 mb-1">Hasta</label>
             <input
               type="datetime-local"
               value={to}
               onChange={(e) => setTo(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
           <button
             onClick={applyFilter}
             disabled={filtering || (!from && !to)}
-            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400"
           >
             {filtering ? "Filtrando..." : "Filtrar"}
           </button>
@@ -203,7 +203,7 @@ export default function SensorDataPointsPage({
             <button
               onClick={clearFilter}
               disabled={filtering}
-              className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300 transition-colors disabled:bg-gray-100"
+              className="px-4 py-2 bg-slate-200 text-slate-700 text-sm rounded-lg hover:bg-slate-300 transition-colors disabled:bg-slate-100"
             >
               Limpiar
             </button>
@@ -213,11 +213,11 @@ export default function SensorDataPointsPage({
 
       {/* Datapoints Chart */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">
+        <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
+          <h2 className="text-xl font-semibold text-slate-800">
             Datos del Sensor
           </h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-slate-600 mt-1">
             {datapoints.length} lecturas registradas
           </p>
         </div>
@@ -225,7 +225,7 @@ export default function SensorDataPointsPage({
         {datapoints.length === 0 ? (
           <div className="px-6 py-12 text-center">
             <svg
-              className="mx-auto h-12 w-12 text-gray-400"
+              className="mx-auto h-12 w-12 text-slate-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -237,10 +237,10 @@ export default function SensorDataPointsPage({
                 d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
               />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">
+            <h3 className="mt-2 text-sm font-medium text-slate-900">
               No hay datos
             </h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-slate-500">
               {from || to
                 ? "No hay lecturas en el rango seleccionado."
                 : "Este sensor aún no tiene lecturas registradas."}

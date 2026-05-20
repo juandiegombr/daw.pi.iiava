@@ -121,7 +121,7 @@ export default function AlertsPage() {
     <ProtectedRoute>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Gestión de Alertas</h1>
+          <h1 className="text-2xl font-bold text-slate-800">Gestión de Alertas</h1>
           <button
             onClick={() => {
               setEditingAlert(null);
@@ -146,7 +146,7 @@ export default function AlertsPage() {
           </div>
         ) : alerts.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <p className="text-gray-500">No hay alertas configuradas</p>
+            <p className="text-slate-500">No hay alertas configuradas</p>
           </div>
         ) : (
           <div className="grid gap-4">
@@ -154,16 +154,25 @@ export default function AlertsPage() {
               <div key={alert._id} className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${alert.enabled ? "bg-green-500" : "bg-gray-300"}`}></span>
-                    <span className="font-medium text-gray-800">
+                    <span className="relative flex h-2.5 w-2.5">
+                      {alert.enabled && (
+                        <span className="absolute inset-0 rounded-full bg-emerald-500 opacity-60 animate-ping" />
+                      )}
+                      <span
+                        className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                          alert.enabled ? "bg-emerald-500" : "bg-slate-300"
+                        }`}
+                      />
+                    </span>
+                    <span className="font-medium text-slate-800">
                       {alert.Sensor?.alias || `Sensor ${alert.sensorId}`}
                     </span>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-slate-500">
                       {alert.condition} {alert.value}
                     </span>
                   </div>
                   {alert.description && (
-                    <p className="text-sm text-gray-600 mt-1 ml-4">{alert.description}</p>
+                    <p className="text-sm text-slate-600 mt-1 ml-4">{alert.description}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -189,13 +198,13 @@ export default function AlertsPage() {
         {showForm && (
           <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">
+              <h2 className="text-xl font-bold text-slate-800 mb-4">
                 {editingAlert ? "Editar Alerta" : "Nueva Alerta"}
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="sensorId" className="block text-sm font-semibold text-gray-700 mb-1">
+                  <label htmlFor="sensorId" className="block text-sm font-semibold text-slate-700 mb-1">
                     Sensor
                   </label>
                   <select
@@ -204,7 +213,7 @@ export default function AlertsPage() {
                     value={formData.sensorId}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Seleccionar sensor</option>
                     {sensors.map((s) => (
@@ -217,7 +226,7 @@ export default function AlertsPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="condition" className="block text-sm font-semibold text-gray-700 mb-1">
+                    <label htmlFor="condition" className="block text-sm font-semibold text-slate-700 mb-1">
                       Condición
                     </label>
                     <select
@@ -225,7 +234,7 @@ export default function AlertsPage() {
                       name="condition"
                       value={formData.condition}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value=">">&gt; Mayor que</option>
                       <option value="<">&lt; Menor que</option>
@@ -237,7 +246,7 @@ export default function AlertsPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="value" className="block text-sm font-semibold text-gray-700 mb-1">
+                    <label htmlFor="value" className="block text-sm font-semibold text-slate-700 mb-1">
                       Valor
                     </label>
                     <input
@@ -248,13 +257,13 @@ export default function AlertsPage() {
                       onChange={handleChange}
                       required
                       step="any"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-1">
+                  <label htmlFor="description" className="block text-sm font-semibold text-slate-700 mb-1">
                     Descripción
                   </label>
                   <input
@@ -263,7 +272,7 @@ export default function AlertsPage() {
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Descripción de la alerta"
                   />
                 </div>
@@ -275,9 +284,9 @@ export default function AlertsPage() {
                     name="enabled"
                     checked={formData.enabled}
                     onChange={handleChange}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <label htmlFor="enabled" className="text-sm text-gray-700">
+                  <label htmlFor="enabled" className="text-sm text-slate-700">
                     Habilitada
                   </label>
                 </div>
@@ -289,7 +298,7 @@ export default function AlertsPage() {
                       setShowForm(false);
                       setEditingAlert(null);
                     }}
-                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
                   >
                     Cancelar
                   </button>

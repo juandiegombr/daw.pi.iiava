@@ -14,23 +14,23 @@ export default function Header() {
   const linkClass = (href) =>
     `text-sm transition-colors ${
       pathname === href
-        ? "text-blue-600 font-semibold"
-        : "text-gray-700 hover:text-blue-600"
+        ? "text-blue-700 font-semibold"
+        : "text-slate-700 hover:text-blue-700"
     }`;
 
   return (
-    <header className="bg-white shadow-sm">
+    <header className="bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
           <div>
             <Link
               to="/"
-              className="text-2xl font-bold text-blue-800 flex items-center"
+              className="text-2xl font-semibold text-blue-700 flex items-center tracking-tight"
             >
               <span className="mr-2">⚙️</span>
               Industrial Monitor
             </Link>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-slate-600">
               Monitor de máquinas industriales en tiempo real
             </p>
           </div>
@@ -57,18 +57,18 @@ export default function Header() {
                     </>
                   )}
                 </nav>
-                <div className="flex items-center gap-2 ml-4 pl-4 border-l border-gray-200">
-                  <span className="text-sm text-gray-600">
+                <div className="flex items-center gap-2 ml-4 pl-4 border-l border-slate-200">
+                  <span className="text-sm text-slate-600">
                     {user?.username}
                     {isAdmin && (
-                      <span className="ml-1 text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">
-                        admin
+                      <span className="ml-1.5 text-[10px] tracking-[0.18em] font-mono bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">
+                        ADMIN
                       </span>
                     )}
                   </span>
                   <button
                     onClick={logout}
-                    className="text-sm text-red-600 hover:text-red-800 transition-colors"
+                    className="text-sm text-red-600 hover:text-red-700 transition-colors cursor-pointer"
                   >
                     Salir
                   </button>
@@ -77,7 +77,7 @@ export default function Header() {
 
               {/* Hamburger button */}
               <button
-                className="md:hidden p-2 text-gray-700 hover:text-blue-600 transition-colors"
+                className="md:hidden p-2 text-slate-700 hover:text-blue-700 transition-colors cursor-pointer"
                 onClick={() => setMenuOpen((prev) => !prev)}
                 aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
                 aria-expanded={menuOpen}
@@ -111,7 +111,7 @@ export default function Header() {
 
         {/* Mobile menu */}
         {isAuthenticated && menuOpen && (
-          <div className="md:hidden mt-3 pt-3 border-t border-gray-200 flex flex-col gap-3">
+          <div className="md:hidden mt-3 pt-3 border-t border-slate-200 flex flex-col gap-3">
             <nav className="flex flex-col gap-2">
               <Link to="/" className={linkClass("/")}>
                 Sensores
@@ -130,18 +130,18 @@ export default function Header() {
                 </>
               )}
             </nav>
-            <div className="flex items-center gap-2 pt-2 border-t border-gray-200">
-              <span className="text-sm text-gray-600">
+            <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
+              <span className="text-sm text-slate-600">
                 {user?.username}
                 {isAdmin && (
-                  <span className="ml-1 text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">
-                    admin
+                  <span className="ml-1.5 text-[10px] tracking-[0.18em] font-mono bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">
+                    ADMIN
                   </span>
                 )}
               </span>
               <button
                 onClick={logout}
-                className="text-sm text-red-600 hover:text-red-800 transition-colors"
+                className="text-sm text-red-600 hover:text-red-700 transition-colors cursor-pointer"
               >
                 Salir
               </button>

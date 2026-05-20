@@ -124,7 +124,7 @@ export default function GeolocationPage() {
   return (
     <ProtectedRoute adminOnly>
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Geolocalización</h1>
+        <h1 className="text-2xl font-bold text-slate-800 mb-6">Geolocalización</h1>
 
         <div className="bg-white rounded-lg shadow-md p-6 space-y-6">
           {error && (
@@ -134,14 +134,14 @@ export default function GeolocationPage() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               Sensor
             </label>
             <select
               value={selectedSensor}
               onChange={(e) => setSelectedSensor(e.target.value)}
               disabled={tracking}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100"
             >
               <option value="">Seleccionar sensor</option>
               {sensors.map((s) => (
@@ -153,14 +153,14 @@ export default function GeolocationPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               Propiedad a enviar
             </label>
             <select
               value={selectedProperty}
               onChange={(e) => setSelectedProperty(e.target.value)}
               disabled={tracking}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100"
             >
               {PROPERTIES.map((p) => (
                 <option key={p.value} value={p.value}>
@@ -173,38 +173,38 @@ export default function GeolocationPage() {
           <button
             onClick={tracking ? stopTracking : startTracking}
             disabled={!tracking && !selectedSensor}
-            className={`w-full px-4 py-2 text-white rounded-lg transition-colors disabled:bg-gray-400 ${
+            className={`w-full px-4 py-2 text-white rounded-lg transition-colors disabled:bg-slate-400 ${
               tracking
                 ? "bg-red-600 hover:bg-red-700"
-                : "bg-green-600 hover:bg-green-700"
+                : "bg-emerald-600 hover:bg-emerald-700"
             }`}
           >
             {tracking ? "Detener envío" : "Iniciar envío"}
           </button>
 
           {location && (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-medium text-gray-800 mb-2">Ubicación actual</h3>
-              <p className="text-sm text-gray-600">
+            <div className="bg-slate-50 rounded-lg p-4">
+              <h3 className="font-medium text-slate-800 mb-2">Ubicación actual</h3>
+              <p className="text-sm text-slate-600">
                 Latitud: <span className="font-mono">{location.latitude.toFixed(6)}</span>
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-600">
                 Longitud: <span className="font-mono">{location.longitude.toFixed(6)}</span>
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-600">
                 Precisión: <span className="font-mono">{location.accuracy.toFixed(1)}m</span>
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-600">
                 Altitud: <span className="font-mono">{location.altitude != null ? `${location.altitude.toFixed(1)}m` : "N/A"}</span>
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-600">
                 Velocidad: <span className="font-mono">{location.speed != null ? `${location.speed.toFixed(2)} m/s` : "N/A"}</span>
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-600">
                 Rumbo: <span className="font-mono">{location.heading != null ? `${location.heading.toFixed(1)}°` : "N/A"}</span>
               </p>
               {tracking && (
-                <p className="text-sm text-green-700 mt-2 font-medium">
+                <p className="text-sm text-emerald-700 mt-2 font-medium">
                   Envíos realizados: {sendCount}
                 </p>
               )}

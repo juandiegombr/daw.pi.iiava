@@ -45,13 +45,31 @@ export default function NotificationListener() {
 
   if (!toast) return null;
 
+  const isAlert = toast.type === "alert";
+
   return (
     <div className="fixed top-4 right-4 z-50">
       <div
-        className={`px-4 py-3 rounded-lg shadow-lg text-white max-w-sm ${
-          toast.type === "alert" ? "bg-orange-500" : "bg-blue-500"
+        className={`px-4 py-3 rounded-lg shadow-lg border max-w-sm ${
+          isAlert
+            ? "bg-red-50 border-red-200 text-red-900"
+            : "bg-sky-50 border-sky-200 text-sky-900"
         }`}
       >
+        <div className="flex items-center gap-2 mb-1">
+          <span
+            className={`block h-2 w-2 rounded-full ${
+              isAlert ? "bg-red-500 animate-pulse" : "bg-sky-500"
+            }`}
+          />
+          <span
+            className={`text-[10px] font-mono tracking-[0.22em] ${
+              isAlert ? "text-red-700" : "text-sky-700"
+            }`}
+          >
+            {isAlert ? "ALERT" : "INFO"}
+          </span>
+        </div>
         <p className="text-sm font-medium">{toast.message}</p>
       </div>
     </div>

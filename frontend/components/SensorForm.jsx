@@ -54,7 +54,7 @@ export default function SensorForm({ onSensorAdded }) {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition-colors"
+        className="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition-colors cursor-pointer"
         aria-label="Nuevo Sensor"
       >
         <svg
@@ -75,19 +75,19 @@ export default function SensorForm({ onSensorAdded }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div
-        className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+        className="bg-white rounded-lg shadow-xl border border-slate-200 max-w-md w-full p-6"
         role="dialog"
         aria-labelledby="dialog-title"
       >
         <div className="flex justify-between items-center mb-6">
-          <h2 id="dialog-title" className="text-2xl font-bold text-gray-800">
+          <h2 id="dialog-title" className="text-2xl font-semibold text-slate-900 tracking-tight">
             Nuevo Sensor
           </h2>
           <button
             onClick={() => setIsOpen(false)}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
           >
             <svg
               className="w-6 h-6"
@@ -115,7 +115,7 @@ export default function SensorForm({ onSensorAdded }) {
           <div>
             <label
               htmlFor="alias"
-              className="block text-sm font-semibold text-gray-700 mb-2"
+              className="block text-xs font-medium text-slate-600 mb-1.5 tracking-wide"
             >
               Nombre del Sensor *
             </label>
@@ -126,7 +126,7 @@ export default function SensorForm({ onSensorAdded }) {
               value={formData.alias}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
               placeholder="Ej: Sensor de Temperatura"
             />
           </div>
@@ -134,7 +134,7 @@ export default function SensorForm({ onSensorAdded }) {
           <div>
             <label
               htmlFor="type"
-              className="block text-sm font-semibold text-gray-700 mb-2"
+              className="block text-xs font-medium text-slate-600 mb-1.5 tracking-wide"
             >
               Tipo de Dato *
             </label>
@@ -144,7 +144,7 @@ export default function SensorForm({ onSensorAdded }) {
               value={formData.type}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
             >
               <option value="int">Integer (Entero)</option>
               <option value="float">Float (Decimal)</option>
@@ -157,14 +157,14 @@ export default function SensorForm({ onSensorAdded }) {
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed cursor-pointer"
             >
               {loading ? "Creando..." : "Crear Sensor"}
             </button>
