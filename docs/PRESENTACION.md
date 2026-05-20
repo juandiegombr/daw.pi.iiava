@@ -4,9 +4,9 @@
 
 **Repositorio GitHub:** [https://github.com/juandiegombr/daw.pi.iiava](https://github.com/juandiegombr/daw.pi.iiava)
 
-**URL aplicación:** [https://daw-pi-iiava.vercel.app](https://daw-pi-iiava.vercel.app)
+**URL aplicación:** [https://d12lcsgk45eqvv.cloudfront.net](https://d12lcsgk45eqvv.cloudfront.net)
 
-**URL API Backend:** [https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net](https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net)
+**URL API Backend:** [https://d12lcsgk45eqvv.cloudfront.net/api](https://d12lcsgk45eqvv.cloudfront.net/api) (servida por CloudFront → EC2)
 
 ---
 
@@ -22,7 +22,7 @@ Una aplicación web completa que demuestra prácticas profesionales de desarroll
 - API RESTful con Express.js
 - Base de datos relacional MySQL
 - Containerización con Docker para desarrollo
-- Despliegue en la nube (Azure + Vercel)
+- Despliegue en la nube (AWS: CloudFront + S3 + EC2 + RDS)
 - Pipeline CI/CD automatizado con GitHub Actions
 
 ---
@@ -65,61 +65,62 @@ Una aplicación web completa que demuestra prácticas profesionales de desarroll
 
 ### DevOps
 
-- **Docker** + **Docker Compose** - Containerización para desarrollo local
+- **Docker** + **Docker Compose** - Containerización para desarrollo y producción
 - **GitHub Actions** - CI/CD automatizado
-- **Azure** - Infraestructura en la nube
-  - **App Service** - Backend Node.js con escalado automático
-  - **Azure Database for MySQL** - Base de datos administrada
-  - **Application Insights** - Monitorización y logs
-- **Vercel** - Hosting frontend con CDN global
+- **AWS** - Infraestructura en la nube (región `eu-west-1`)
+  - **CloudFront** - CDN global y único punto de entrada público (HTTPS terminado en el edge)
+  - **S3** - Alojamiento del frontend estático (`daw-pi-iava-frontend`)
+  - **EC2** - Backend Node.js corriendo en un contenedor Docker
+  - **RDS MySQL** - Base de datos administrada con backups automáticos
 
 ---
 
 ## Arquitectura en Producción
 
-La aplicación está desplegada en la nube utilizando una arquitectura moderna que combina servicios de Azure y Vercel:
+La aplicación está desplegada íntegramente en AWS. CloudFront es el único punto de entrada público: sirve el frontend desde S3 y enruta `/api/*` al backend en EC2:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        Vercel CDN                           │
-│                    (Frontend - Next.js)                     │
-│                 Global Edge Network (180+ PoPs)             │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           ↓ (API calls to)
-┌──────────────────────────────────────────────────────────────┐
-│           Azure App Service (Web App)                        │
-│          (Backend - Node.js Express API)                     │
-│   pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azure...      │
-│          - Auto-scaling habilitado                           │
-│          - Health checks automáticos                         │
-│          - Logs en tiempo real                               │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           ↓ (Database connection)
-┌──────────────────────────────────────────────────────────────┐
-│        Azure Database for MySQL (Flexible Server)           │
-│          projecte-db.mysql.database.azure.com                │
-│          - Backups automáticos (7 días retención)            │
-│          - SSL/TLS obligatorio                               │
-│          - Firewall configurado                              │
-└──────────────────────────────────────────────────────────────┘
+                       ┌─────────────────────────┐
+                       │     CloudFront (CDN)    │
+                       │  d12lcsgk45eqvv.cloudfront.net
+                       │  Distribución: E8CAZK17RKQ5Z
+                       └────────────┬────────────┘
+                                    │
+                ┌───────────────────┴───────────────────┐
+                │                                       │
+        (comportamiento por defecto)             (comportamiento /api/*)
+                │                                       │
+                ↓                                       ↓
+   ┌──────────────────────────┐         ┌─────────────────────────────┐
+   │  S3 (estático)           │         │   EC2 + Docker              │
+   │  daw-pi-iava-frontend    │         │   ec2-108-129-184-221       │
+   │  (build del frontend)    │         │   .eu-west-1.compute...     │
+   │                          │         │   Node.js / Express :80→3000│
+   └──────────────────────────┘         └──────────────┬──────────────┘
+                                                       │
+                                                       ↓
+                                        ┌─────────────────────────────┐
+                                        │     RDS MySQL 8.0           │
+                                        │  daw.cjgqeq2gs0wl           │
+                                        │  .eu-west-1.rds.amazonaws.com
+                                        │  - Backups automáticos      │
+                                        │  - Security group privado   │
+                                        └─────────────────────────────┘
 ```
 
 ### Componentes en Producción
 
-| Componente | Plataforma | URL | Estado |
-|-----------|-----------|-----|--------|
-| **Frontend** | Vercel | [daw-pi-iiava.vercel.app](https://daw-pi-iiava.vercel.app) | ✅ Activo |
-| **Backend** | Azure App Service | [pi-backend...azurewebsites.net](https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net) | ✅ Activo |
-| **Base de Datos** | Azure MySQL | `projecte-db.mysql.database.azure.com` | ✅ Activo |
+| Componente | Plataforma | URL / Identificador | Estado |
+|-----------|-----------|---------------------|--------|
+| **Frontend / CDN** | CloudFront + S3 | [d12lcsgk45eqvv.cloudfront.net](https://d12lcsgk45eqvv.cloudfront.net) | ✅ Activo |
+| **Backend** | EC2 + Docker | `ec2-108-129-184-221.eu-west-1.compute.amazonaws.com` | ✅ Activo |
+| **Base de Datos** | RDS MySQL 8.0 | `daw.cjgqeq2gs0wl.eu-west-1.rds.amazonaws.com` | ✅ Activo |
 
 ### Características de la Arquitectura
 
-- ✅ **Alta Disponibilidad**: Servicios administrados con SLA del 99.9%
-- ✅ **Escalabilidad**: Auto-scaling en App Service y Vercel
-- ✅ **Seguridad**: HTTPS obligatorio, SSL para base de datos, firewall configurado
-- ✅ **Monitorización**: Logs en tiempo real y métricas de rendimiento
-- ✅ **CI/CD**: Despliegue automático desde GitHub
-- ✅ **CDN Global**: Vercel Edge Network con 180+ puntos de presencia
-- ✅ **Backups**: Copias de seguridad automáticas de base de datos
+- ✅ **Mismo origen**: Frontend y `/api/*` servidos desde el mismo dominio CloudFront → sin CORS
+- ✅ **CDN Global**: Edge cache de CloudFront para los assets estáticos
+- ✅ **Seguridad**: HTTPS obligatorio (terminado en CloudFront), security groups privados, contenedor con `restart: unless-stopped`
+- ✅ **Monitorización**: Logs del contenedor (`docker logs`), métricas de RDS y CloudFront en CloudWatch
+- ✅ **CI/CD**: Despliegue automático desde GitHub (S3 sync + CloudFront invalidation; SSH a EC2 + rebuild Docker)
+- ✅ **Backups**: RDS hace backups automáticos diarios (7 días de retención por defecto)

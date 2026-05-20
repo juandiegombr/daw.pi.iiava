@@ -34,51 +34,56 @@ To understand the full project vision, use cases, and system architecture:
 - **Docker** & **Docker Compose** - Containerization
 - **Makefile** - Command automation
 - **GitHub Actions** - CI/CD pipelines
-- **Azure** - Cloud deployment infrastructure
-  - **App Service** - Backend API server
-  - **Azure Database for MySQL** - Managed database
-- **Vercel** - Frontend hosting with global CDN
+- **AWS** - Cloud deployment infrastructure (region `eu-west-1`)
+  - **CloudFront** - Global CDN and single public entry point
+  - **S3** - Static frontend hosting
+  - **EC2** - Node.js backend running in a Docker container
+  - **RDS MySQL** - Managed database
 
 ## Cloud Deployment
 
 ### Current Production Architecture
 
+CloudFront is the single public entry point: it serves the frontend from S3 and routes `/api/*` to the backend on EC2.
+
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        Vercel CDN                           │
-│                    (Frontend - Next.js)                     │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           ↓ (API calls to)
-┌──────────────────────────────────────────────────────────────┐
-│           Azure App Service (Web App)                        │
-│          (Backend - Node.js Express API)                     │
-│   pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azure...      │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           ↓ (Database connection)
-┌──────────────────────────────────────────────────────────────┐
-│        Azure Database for MySQL (Managed Instance)           │
-│               (Production Database)                          │
-└──────────────────────────────────────────────────────────────┘
+                       ┌─────────────────────────┐
+                       │     CloudFront (CDN)    │
+                       │  d12lcsgk45eqvv.cloudfront.net
+                       └────────────┬────────────┘
+                                    │
+                ┌───────────────────┴───────────────────┐
+                │                                       │
+        (default behavior)                       (/api/*)
+                │                                       │
+                ↓                                       ↓
+   ┌──────────────────────────┐         ┌─────────────────────────────┐
+   │  S3 (static)             │         │   EC2 + Docker              │
+   │  daw-pi-iava-frontend    │         │   Node.js / Express :80→3000│
+   └──────────────────────────┘         └──────────────┬──────────────┘
+                                                       │
+                                                       ↓
+                                        ┌─────────────────────────────┐
+                                        │     RDS MySQL 8.0           │
+                                        └─────────────────────────────┘
 ```
 
 ### Deployed Components
 
-| Component | Platform | URL | Status |
-|-----------|----------|-----|--------|
-| **Frontend** | Vercel | [https://daw-pi-iiava.vercel.app](https://daw-pi-iiava.vercel.app) | ✅ Production |
-| **Backend** | Azure App Service | [https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net](https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net) | ✅ Production |
-| **Database** | Azure MySQL | `projecte-db.mysql.database.azure.com` | ✅ Production |
+| Component | Platform | URL / Identifier | Status |
+|-----------|----------|------------------|--------|
+| **Frontend / CDN** | CloudFront + S3 | [https://d12lcsgk45eqvv.cloudfront.net](https://d12lcsgk45eqvv.cloudfront.net) | ✅ Production |
+| **Backend** | EC2 + Docker | `ec2-108-129-184-221.eu-west-1.compute.amazonaws.com` | ✅ Production |
+| **Database** | RDS MySQL 8.0 | `daw.cjgqeq2gs0wl.eu-west-1.rds.amazonaws.com` | ✅ Production |
 
 ---
 
 ### Deployment Documentation
 
-For more detailed information about the Azure deployment architecture:
+For more detailed information about the AWS deployment architecture:
 
-- **[Azure Deployment Documentation (English)](AZURE_DEPLOYMENT_EN.md)**
-- **[Documentación de Despliegue Azure (Español)](AZURE_DEPLOYMENT_ES.md)**
+- **[AWS Deployment Documentation (English)](AWS_DEPLOYMENT_EN.md)**
+- **[Documentación de Despliegue AWS (Español)](AWS_DEPLOYMENT_ES.md)**
 
 ## Prerequisites
 
@@ -240,98 +245,98 @@ Expected response (example):
 
 ## Production Deployment
 
-### Frontend (Vercel)
+The entire infrastructure lives on AWS (`eu-west-1`). The full reference (resource creation, IAM, costs, troubleshooting) lives in [`AWS_DEPLOYMENT_EN.md`](AWS_DEPLOYMENT_EN.md). Summary:
 
-The frontend automatically deploys to Vercel via GitHub Actions:
+### Frontend (S3 + CloudFront)
+
+The frontend deploys automatically via GitHub Actions (`.github/workflows/frontend-deploy.yml`):
 
 1. **Initial Setup:**
-   - Connect GitHub repository to Vercel
-   - Vercel automatically detects Next.js
-   - Configure project root: `frontend`
+   - S3 bucket `daw-pi-iava-frontend` (Block Public Access enabled; CloudFront reads via OAC)
+   - CloudFront distribution `E8CAZK17RKQ5Z`
+   - `/api/*` behavior routes to the EC2 origin
 
-2. **Environment Variables:**
-   - `API_URL` → Backend URL (e.g., `https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net`)
+2. **Deployment:**
+   - Push to `main` touching `frontend/**` → build, `aws s3 sync`, `cloudfront create-invalidation /*`
+   - URL: `https://d12lcsgk45eqvv.cloudfront.net`
 
-3. **Deployment:**
-   - Push to `main` → Vercel builds and deploys automatically
-   - URL: `https://daw-pi-iiava.vercel.app`
+### Backend (EC2 + Docker)
 
-### Backend (Azure App Service)
-
-The backend automatically deploys to Azure via GitHub Actions:
+The backend deploys automatically via GitHub Actions (`.github/workflows/backend-deploy.yml`):
 
 1. **Initial Setup:**
    ```bash
-   # Create App Service
-   - Name: pi-backend
-   - Runtime: Node 22
-   - OS: Linux
-   - Plan: Basic or higher
+   # EC2 instance with Docker
+   - AMI: Amazon Linux 2023
+   - Type: t3.micro
+   - Region: eu-west-1
+   - Security group: 22/tcp (admin) and 80/tcp (CloudFront)
    ```
 
-2. **Environment Variables:**
-   - `MYSQL_HOST` → Azure MySQL server
-   - `MYSQL_USER` → MySQL username
-   - `MYSQL_PASSWORD` → MySQL password
-   - `MYSQL_DATABASE` → Database name
-   - `PORT` → 3000 (default)
+2. **Environment Variables** (in `~/daw.pi.iiava/backend/.env` on the EC2 host):
+   - `MYSQL_HOST` → RDS endpoint
+   - `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`
+   - `PORT` → 3000 (mapped to host port 80)
+   - `JWT_SECRET`
 
 3. **Deployment:**
-   - Push to `main` → GitHub Actions builds and deploys
-   - URL: `https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net`
+   - Push to `main` touching `backend/**` → SSH to EC2, `git pull`, `docker build`, container restart, `/api/*` invalidation in CloudFront
+   - Host: `ec2-108-129-184-221.eu-west-1.compute.amazonaws.com`
 
-### Database (Azure MySQL)
+### Database (RDS MySQL)
 
 1. **Creation:**
    ```bash
-   - Type: Azure Database for MySQL - Flexible Server
-   - Name: projecte-db
-   - Admin: juandiegombr
-   - Region: Spain Central
+   - Engine: MySQL 8.0 (RDS)
+   - Identifier: daw
+   - Instance: db.t3.micro
+   - Region: eu-west-1
    ```
 
 2. **Initialize Tables:**
    ```bash
-   # Connect to Azure MySQL
-   mysql -h projecte-db.mysql.database.azure.com -u juandiegombr -p
+   # Connect to RDS
+   mysql -h daw.cjgqeq2gs0wl.eu-west-1.rds.amazonaws.com -u admin -p
 
    # Tables are automatically created when backend starts
    # (Sequelize sync)
    ```
 
-3. **Firewall Configuration:**
-   - Allow connections from Azure App Service
-   - Allow connections from your local IP (development)
+3. **Security Group Configuration:**
+   - Allow connections from the EC2 security group on `3306`
+   - Allow connections from your local IP (development) if needed
 
 ---
 
 ## Production Troubleshooting
 
-### Frontend Cannot Connect to Backend
+### Frontend Cannot Reach Backend
 
 **Symptoms:**
-- 503/504 errors on Vercel
-- API calls return 404
+- 502/504 errors from CloudFront
+- API calls return 404 or 5xx
 
 **Solutions:**
-1. Verify `API_URL` in Vercel → Settings → Environment Variables
-2. Check backend is running: `https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net/api/sensors`
-3. Review Azure logs: App Service → Log stream
+1. SSH to EC2 and check the container is running: `docker ps`, `docker logs backend-container`
+2. Check backend directly at the origin: `curl http://ec2-108-129-184-221.eu-west-1.compute.amazonaws.com/api/sensors`
+3. Verify the CloudFront `/api/*` behavior points at the EC2 origin and has `CachingDisabled` + `AllViewer` origin request policy
 
-### Backend Fails to Start on Azure
+### Backend Fails to Start on EC2
 
 **Symptoms:**
-- Status: Stopped or Failed
-- SSH: Connection closed
+- Container exits immediately (`docker ps -a` shows it stopped)
 
 **Solutions:**
-1. Verify MySQL environment variables are configured
-2. Verify MySQL connection:
+1. `docker logs backend-container` for the error
+2. Verify `~/daw.pi.iiava/backend/.env` exists with valid RDS credentials
+3. Test the RDS connection from EC2:
    ```bash
-   mysql -h projecte-db.mysql.database.azure.com -u juandiegombr -p
+   mysql -h daw.cjgqeq2gs0wl.eu-west-1.rds.amazonaws.com -u admin -p
    ```
-3. Review logs: App Service → Log stream
-4. Restart App Service: Click Restart button in Azure Portal
+4. Restart by re-running the GitHub Actions workflow or manually:
+   ```bash
+   docker rm -f backend-container && docker run -d -p 80:3000 --name backend-container --env-file .env --restart unless-stopped backend
+   ```
 
 ### Database Connection Issues
 
@@ -340,9 +345,9 @@ The backend automatically deploys to Azure via GitHub Actions:
 - Error: "connect ETIMEDOUT"
 
 **Solutions:**
-1. Verify Azure MySQL firewall allows App Service
-2. Verify MySQL credentials in environment variables
-3. Check MySQL server is "Available" in Azure Portal
+1. Verify the RDS security group allows the EC2 security group on `3306`
+2. Verify MySQL credentials in `~/daw.pi.iiava/backend/.env`
+3. Confirm the RDS instance is "Available" in the AWS console
 
 ## License
 

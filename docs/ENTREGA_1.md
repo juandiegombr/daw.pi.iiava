@@ -87,7 +87,7 @@ La **Entrega 1** tiene como objetivo demostrar que la base del proyecto esta com
 | Sistema de alertas | Alertas configurables con condiciones logicas | Completado |
 | Notificaciones en tiempo real | Server-Sent Events para actualizaciones instantaneas | Completado |
 | Autenticacion | Registro, login, JWT, roles de usuario | Completado |
-| Despliegue en la nube | Frontend en Vercel, backend en Azure, BD en Azure MySQL | Completado |
+| Despliegue en la nube | Frontend en S3 + CloudFront, backend en EC2, BD en RDS MySQL (AWS, eu-west-1) | Completado |
 | CI/CD | Despliegue automatizado con GitHub Actions | Completado |
 | Testing | Tests de integracion en frontend y backend | Completado |
 
@@ -96,30 +96,37 @@ La **Entrega 1** tiene como objetivo demostrar que la base del proyecto esta com
 ### Diagrama de arquitectura en produccion
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        Vercel CDN                           │
-│                    (Frontend - Next.js)                      │
-│            https://daw-pi-iiava.vercel.app                  │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           ↓ (API calls)
-┌──────────────────────────────────────────────────────────────┐
-│           Azure App Service (Web App)                        │
-│          (Backend - Node.js / Express API)                   │
-│   projecte-iiava-backend-....azurewebsites.net               │
-│                                                              │
-│   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│   │  REST API     │  │  SSE Service │  │  Auth (JWT)  │     │
-│   │  (Express)    │  │  (Real-time) │  │  (bcrypt)    │     │
-│   └──────────────┘  └──────────────┘  └──────────────┘     │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           ↓ (Sequelize ORM)
-┌──────────────────────────────────────────────────────────────┐
-│        Azure Database for MySQL (Flexible Server)            │
-│               projecte-db.mysql.database.azure.com           │
-│                      Region: Spain Central                   │
-└──────────────────────────────────────────────────────────────┘
+                       ┌─────────────────────────┐
+                       │     CloudFront (CDN)    │
+                       │  d12lcsgk45eqvv.cloudfront.net
+                       │  Distribución: E8CAZK17RKQ5Z
+                       └────────────┬────────────┘
+                                    │
+                ┌───────────────────┴───────────────────┐
+                │                                       │
+        (default behavior)                       (/api/*)
+                │                                       │
+                ↓                                       ↓
+   ┌──────────────────────────┐         ┌─────────────────────────────┐
+   │  S3 (estático)           │         │   EC2 + Docker              │
+   │  daw-pi-iava-frontend    │         │   Node.js / Express :80→3000│
+   │  (build del frontend)    │         │                             │
+   └──────────────────────────┘         │   ┌──────────┐ ┌──────────┐ │
+                                        │   │ REST API │ │   SSE    │ │
+                                        │   │(Express) │ │(real-t.) │ │
+                                        │   └──────────┘ └──────────┘ │
+                                        │   ┌──────────────────────┐  │
+                                        │   │   Auth (JWT/bcrypt)  │  │
+                                        │   └──────────────────────┘  │
+                                        └──────────────┬──────────────┘
+                                                       │ (Sequelize ORM)
+                                                       ↓
+                                        ┌─────────────────────────────┐
+                                        │     RDS MySQL 8.0           │
+                                        │  daw.cjgqeq2gs0wl           │
+                                        │  .eu-west-1.rds.amazonaws.com
+                                        │       Región: eu-west-1     │
+                                        └─────────────────────────────┘
 ```
 
 ### Patrones de comunicacion
@@ -281,9 +288,10 @@ Sistema de autenticacion completo:
 |---|---|
 | Docker & Docker Compose | Contenedorizacion para desarrollo y produccion |
 | GitHub Actions | CI/CD: build, test y deploy automatizados |
-| Vercel | Hosting frontend con CDN global y deploy automatico |
-| Azure App Service | Hosting backend (Node.js en Linux) |
-| Azure Database for MySQL | Base de datos gestionada (Flexible Server) |
+| AWS CloudFront | CDN global y unico punto de entrada publico (HTTPS) |
+| AWS S3 | Hosting estatico del frontend (`daw-pi-iava-frontend`) |
+| AWS EC2 | Host del backend Node.js dentro de un contenedor Docker |
+| AWS RDS (MySQL 8.0) | Base de datos gestionada con backups automaticos |
 | Makefile | +20 comandos para automatizar operaciones de desarrollo |
 
 ## 6. Modelo de datos
@@ -409,19 +417,19 @@ Sistema de autenticacion completo:
 
 La aplicacion esta desplegada en produccion y es accesible desde Internet:
 
-| Componente | Plataforma | URL | Estado |
+| Componente | Plataforma | URL / Identificador | Estado |
 |---|---|---|---|
-| **Frontend** | Vercel (CDN global) | https://daw-pi-iiava.vercel.app | Activo |
-| **Backend** | Azure App Service | https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net | Activo |
-| **Base de Datos** | Azure MySQL Flexible Server | `projecte-db.mysql.database.azure.com` (Spain Central) | Activo |
+| **Frontend / CDN** | AWS CloudFront + S3 | https://d12lcsgk45eqvv.cloudfront.net (distribucion `E8CAZK17RKQ5Z`, bucket `daw-pi-iava-frontend`) | Activo |
+| **Backend** | AWS EC2 + Docker | `ec2-108-129-184-221.eu-west-1.compute.amazonaws.com` | Activo |
+| **Base de Datos** | AWS RDS MySQL 8.0 | `daw.cjgqeq2gs0wl.eu-west-1.rds.amazonaws.com` (eu-west-1) | Activo |
 
 ### CI/CD con GitHub Actions
 
-El despliegue se realiza de forma completamente automatizada:
+El despliegue se realiza de forma completamente automatizada (`.github/workflows/`):
 
-1. **Push a `main`** → Se disparan los workflows de GitHub Actions
-2. **Frontend**: Vercel detecta cambios en `/frontend` y despliega automaticamente a su CDN global
-3. **Backend**: GitHub Actions ejecuta build y despliega en Azure App Service
+1. **Push a `main`** → se disparan los workflows segun la ruta modificada
+2. **Frontend** (`frontend-deploy.yml`): build con Node 22, `aws s3 sync frontend/dist/ s3://daw-pi-iava-frontend/ --delete` e invalidacion `/*` en CloudFront
+3. **Backend** (`backend-deploy.yml`): SSH a la instancia EC2, `git pull`, `docker build`, recreacion del contenedor con `--env-file .env` e invalidacion `/api/*` en CloudFront
 4. **Base de datos**: Sequelize sincroniza el esquema automaticamente al arrancar el servidor (`sync()`)
 
 ### Contenerizacion con Docker
@@ -479,7 +487,7 @@ Se prioriza el **testing de integracion** que prueba el comportamiento de la apl
 | Autenticacion y autorizacion (JWT) | Completado | 100% |
 | Envio manual de datos | Completado | 100% |
 | Geolocalizacion (experimental) | Completado | 100% |
-| Despliegue en produccion (Azure + Vercel) | Completado | 100% |
+| Despliegue en produccion (AWS: CloudFront + S3 + EC2 + RDS) | Completado | 100% |
 | CI/CD automatizado (GitHub Actions) | Completado | 100% |
 | Testing de integracion (frontend + backend) | Completado | 100% |
 
@@ -507,8 +515,8 @@ Para la proxima entrega se planifica:
 | Recurso | Enlace |
 |---|---|
 | **Repositorio GitHub** | https://github.com/juandiegombr/daw.pi.iiava |
-| **Aplicacion en produccion** | https://daw-pi-iiava.vercel.app |
-| **API Backend** | https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net |
+| **Aplicacion en produccion** | https://d12lcsgk45eqvv.cloudfront.net |
+| **API Backend** | https://d12lcsgk45eqvv.cloudfront.net/api (CloudFront → EC2) |
 
 ---
 

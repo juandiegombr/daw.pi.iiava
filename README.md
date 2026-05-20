@@ -34,51 +34,56 @@ Para entender la visión completa del proyecto, casos de uso y arquitectura del 
 - **Docker** & **Docker Compose** - Containerización
 - **Makefile** - Automatización de comandos
 - **GitHub Actions** - Pipelines CI/CD
-- **Azure** - Infraestructura de despliegue en la nube
-  - **App Service** - Servidor API backend
-  - **Azure Database for MySQL** - Base de datos administrada
-- **Vercel** - Alojamiento frontend con CDN global
+- **AWS** - Infraestructura de despliegue en la nube (región `eu-west-1`)
+  - **CloudFront** - CDN global y único punto de entrada público
+  - **S3** - Alojamiento estático del frontend
+  - **EC2** - Backend Node.js en contenedor Docker
+  - **RDS MySQL** - Base de datos administrada
 
 ## Despliegue en la Nube
 
 ### Arquitectura Actual (Production)
 
+CloudFront es el único punto de entrada: sirve el frontend desde S3 y enruta `/api/*` al backend en EC2.
+
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        Vercel CDN                           │
-│                    (Frontend - Next.js)                     │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           ↓ (API calls to)
-┌──────────────────────────────────────────────────────────────┐
-│           Azure App Service (Web App)                        │
-│          (Backend - Node.js Express API)                     │
-│   pi-backend-ahdch5g9ghajbjh3.spaincentral-01.azure...      │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           ↓ (Database connection)
-┌──────────────────────────────────────────────────────────────┐
-│        Azure Database for MySQL (Managed Instance)           │
-│               (Production Database)                          │
-└──────────────────────────────────────────────────────────────┘
+                       ┌─────────────────────────┐
+                       │     CloudFront (CDN)    │
+                       │  d12lcsgk45eqvv.cloudfront.net
+                       └────────────┬────────────┘
+                                    │
+                ┌───────────────────┴───────────────────┐
+                │                                       │
+        (por defecto)                            (/api/*)
+                │                                       │
+                ↓                                       ↓
+   ┌──────────────────────────┐         ┌─────────────────────────────┐
+   │  S3 (estático)           │         │   EC2 + Docker              │
+   │  daw-pi-iava-frontend    │         │   Node.js / Express :80→3000│
+   └──────────────────────────┘         └──────────────┬──────────────┘
+                                                       │
+                                                       ↓
+                                        ┌─────────────────────────────┐
+                                        │     RDS MySQL 8.0           │
+                                        └─────────────────────────────┘
 ```
 
 ### Componentes Desplegados
 
-| Componente | Plataforma | URL | Estado |
-|-----------|-----------|-----|--------|
-| **Frontend** | Vercel | [https://daw-pi-iiava.vercel.app](https://daw-pi-iiava.vercel.app) | ✅ Producción |
-| **Backend** | Azure App Service | [https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net](https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net) | ✅ Producción |
-| **Base de Datos** | Azure MySQL | `projecte-db.mysql.database.azure.com` | ✅ Producción |
+| Componente | Plataforma | URL / Identificador | Estado |
+|-----------|-----------|---------------------|--------|
+| **Frontend / CDN** | CloudFront + S3 | [https://d12lcsgk45eqvv.cloudfront.net](https://d12lcsgk45eqvv.cloudfront.net) | ✅ Producción |
+| **Backend** | EC2 + Docker | `ec2-108-129-184-221.eu-west-1.compute.amazonaws.com` | ✅ Producción |
+| **Base de Datos** | RDS MySQL 8.0 | `daw.cjgqeq2gs0wl.eu-west-1.rds.amazonaws.com` | ✅ Producción |
 
 ---
 
 ### Documentación de Despliegue
 
-Para información más detallada sobre la arquitectura de despliegue en Azure:
+Para información más detallada sobre la arquitectura de despliegue en AWS:
 
-- **[Documentación de Despliegue Azure (Español)](docs/AZURE_DEPLOYMENT_ES.md)**
-- **[Azure Deployment Documentation (English)](docs/AZURE_DEPLOYMENT_EN.md)**
+- **[Documentación de Despliegue AWS (Español)](docs/AWS_DEPLOYMENT_ES.md)**
+- **[AWS Deployment Documentation (English)](docs/AWS_DEPLOYMENT_EN.md)**
 
 ## Requisitos Previos
 
@@ -284,68 +289,66 @@ Si obtienes un error "port already in use", puedes:
 
 ## Despliegue a Producción
 
-### Frontend (Vercel)
+Toda la infraestructura vive en AWS (`eu-west-1`). El detalle completo (creación de recursos, IAM, costos, troubleshooting) está en [`docs/AWS_DEPLOYMENT_ES.md`](docs/AWS_DEPLOYMENT_ES.md). Resumen:
 
-El frontend se despliega automáticamente a Vercel mediante GitHub Actions:
+### Frontend (S3 + CloudFront)
+
+El frontend se despliega automáticamente mediante GitHub Actions (`.github/workflows/frontend-deploy.yml`):
 
 1. **Configuración Inicial:**
-   - Conectar repositorio GitHub a Vercel
-   - Vercel detecta automáticamente Next.js
-   - Configurar raíz de proyecto: `frontend`
+   - Bucket S3 `daw-pi-iava-frontend` (Block Public Access activo; CloudFront accede vía OAC)
+   - Distribución CloudFront `E8CAZK17RKQ5Z`
+   - Behavior `/api/*` enruta al origen EC2
 
-2. **Variables de Entorno:**
-   - `API_URL` → URL del backend (ej: `https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net`)
+2. **Despliegue:**
+   - Push a `main` con cambios en `frontend/**` → build, `aws s3 sync` y `cloudfront create-invalidation /*`
+   - URL: `https://d12lcsgk45eqvv.cloudfront.net`
 
-3. **Despliegue:**
-   - Empuja a `main` → Vercel construye y despliega automáticamente
-   - URL: `https://daw-pi-iiava.vercel.app`
+### Backend (EC2 + Docker)
 
-### Backend (Azure App Service)
-
-El backend se despliega automáticamente a Azure mediante GitHub Actions:
+El backend se despliega automáticamente mediante GitHub Actions (`.github/workflows/backend-deploy.yml`):
 
 1. **Configuración Inicial:**
    ```bash
-   # Crear App Service
-   - Nombre: pi-backend
-   - Runtime: Node 22
-   - OS: Linux
-   - Plan: Básico o Superior
+   # Instancia EC2 con Docker
+   - AMI: Amazon Linux 2023
+   - Tipo: t3.micro
+   - Región: eu-west-1
+   - Security group: 22/tcp (admin) y 80/tcp (CloudFront)
    ```
 
-2. **Variables de Entorno:**
-   - `MYSQL_HOST` → Servidor Azure MySQL
-   - `MYSQL_USER` → Usuario MySQL
-   - `MYSQL_PASSWORD` → Contraseña MySQL
-   - `MYSQL_DATABASE` → Nombre de base de datos
-   - `PORT` → 3000 (predeterminado)
+2. **Variables de Entorno** (en `~/daw.pi.iiava/backend/.env` del host EC2):
+   - `MYSQL_HOST` → endpoint RDS
+   - `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`
+   - `PORT` → 3000 (mapeado a 80 en el host)
+   - `JWT_SECRET`
 
 3. **Despliegue:**
-   - Empuja a `main` → GitHub Actions construye y despliega
-   - URL: `https://projecte-iiava-backend-eue7f0eghzakbkcd.spaincentral-01.azurewebsites.net`
+   - Push a `main` con cambios en `backend/**` → SSH a EC2, `git pull`, `docker build`, reinicio del contenedor e invalidación de `/api/*` en CloudFront
+   - Host: `ec2-108-129-184-221.eu-west-1.compute.amazonaws.com`
 
-### Base de Datos (Azure MySQL)
+### Base de Datos (RDS MySQL)
 
 1. **Creación:**
    ```bash
-   - Tipo: Azure Database for MySQL - Flexible Server
-   - Nombre: projecte-db
-   - Admin: juandiegombr
-   - Región: Spain Central
+   - Motor: MySQL 8.0 (RDS)
+   - Identifier: daw
+   - Instancia: db.t3.micro
+   - Región: eu-west-1
    ```
 
 2. **Inicializar Tablas:**
    ```bash
-   # Conectar a Azure MySQL
-   mysql -h projecte-db.mysql.database.azure.com -u juandiegombr -p
+   # Conectar a RDS
+   mysql -h daw.cjgqeq2gs0wl.eu-west-1.rds.amazonaws.com -u admin -p
 
    # Las tablas se crean automáticamente cuando el backend inicia
    # (Sequelize sync)
    ```
 
-3. **Configuración de Firewall:**
-   - Permitir conexiones desde Azure App Service
-   - Permitir conexiones desde tu IP local (desarrollo)
+3. **Configuración de Security Group:**
+   - Permitir conexiones desde el security group de EC2 en `3306`
+   - Permitir conexiones desde tu IP local (desarrollo) si lo necesitas
 
 ## Licencia
 
