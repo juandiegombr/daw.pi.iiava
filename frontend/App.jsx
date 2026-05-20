@@ -9,6 +9,7 @@ import SendDataPage from "./pages/send-data";
 import GeolocationPage from "./pages/geolocation";
 import SensorDataPointsPage from "./pages/sensors/[id]/datapoints";
 import StyleGuidePage from "./pages/styleguide";
+import PresentationPage from "./pages/presentation";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="/geolocation" element={<GeolocationPage />} />
         <Route path="/sensors/:id/datapoints" element={<SensorDataPointsPage />} />
         <Route path="/styleguide" element={<StyleGuidePage />} />
+        <Route path="/presentation" element={<PresentationPage />} />
       </Routes>
       <Footer />
       <NotificationListener />
